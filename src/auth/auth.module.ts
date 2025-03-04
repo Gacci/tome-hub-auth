@@ -1,16 +1,22 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
+
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { MailerModule } from '../mailer/mailer.module';
-// import { UserModule } from '../user/user.module';
+import { PassportModule } from '@nestjs/passport';
 import { SequelizeModule } from '@nestjs/sequelize';
+
+import { AuthService } from './auth.service';
+import { RedisService } from '../redis/redis.service';
+import { SessionTokenService } from '../user-session/session-token.service';
+
+import { JwtStrategy } from './strategies/jwt.strategy';
+
+import { AuthController } from './auth.controller';
+
+import { MailerModule } from '../mailer/mailer.module';
+
 import { User } from '../user/user.entity';
 import { SessionToken } from '../user-session/session-token.entity';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { PassportModule } from '@nestjs/passport';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { SessionTokenService } from '../user-session/session-token.service'; // Import UserModule
 
 @Module({
   controllers: [AuthController],
@@ -25,11 +31,10 @@ import { SessionTokenService } from '../user-session/session-token.service'; // 
       })
     }),
     MailerModule,
-    PassportModule.register({ defaultStrategy: 'jwt' }), // Needed for authentication
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     SequelizeModule.forFeature([User, SessionToken])
-
-  ], // Import UserModule and UserSessionModule
-  providers: [AuthService, JwtStrategy, SessionTokenService],
-  exports: [AuthService, JwtStrategy, PassportModule, JwtModule] //
+  ],
+  providers: [AuthService, JwtStrategy, RedisService, SessionTokenService],
+  exports: [AuthService, JwtStrategy, PassportModule, RedisService, JwtModule]
 })
 export class AuthModule {}

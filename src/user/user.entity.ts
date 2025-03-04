@@ -19,7 +19,7 @@ import * as bcrypt from 'bcryptjs';
 @DefaultScope(() => ({
   where: { deletedAt: null }
 }))
-@Table({ tableName: 'users', timestamps: true, paranoid: true })
+@Table({ tableName: 'Users', timestamps: true, paranoid: true })
 export class User extends Model<
   InferAttributes<User>,
   InferCreationAttributes<User>

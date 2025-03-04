@@ -14,15 +14,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   canActivate(
     context: ExecutionContext
   ): boolean | Promise<boolean> | Observable<boolean> {
-    const handler = context.getHandler();
-    const classRef = context.getClass();
+    const isPublic = this.reflector.get<boolean>(
+      IS_PUBLIC_KEY,
+      context.getHandler()
+    );
 
-    const isPublic =
-      this.reflector.get<boolean>(IS_PUBLIC_KEY, handler) ||
-      this.reflector.get<boolean>(IS_PUBLIC_KEY, classRef);
-
-    console.log(`Handler: ${handler.name}, Class: ${classRef.name}, isPublic:`, isPublic);
-
+    console.log('@Public: ', isPublic);
     if (isPublic) {
       return true; // Allow public routes
     }

@@ -1,34 +1,68 @@
 import { APP_GUARD } from '@nestjs/core';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { SequelizeModule } from '@nestjs/sequelize';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+
+import { join } from 'path';
 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
 
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
     AuthModule,
     ConfigModule.forRoot(),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    SequelizeModule.forRoot({
-      dialect: 'mysql', // Change to 'postgres', 'sqlite', etc., if needed
-      host: process.env.DB_HOST || 'localhost',
-      port: Number(process.env.DB_PORT) || 3306,
-      username: process.env.DB_USER || 'root',
-      password: process.env.DB_PASS || '',
-      database: process.env.DB_NAME || 'bookmerang',
-      autoLoadModels: true,
-      synchronize: true // Disable in production
+    SequelizeModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        dialect: 'mysql',
+        host: configService.get<string>('DB_HOST'),
+        port: configService.get<number>('DB_PORT'),
+        username: configService.get<string>('DB_USER'),
+        password: configService.get<string>('DB_PASS'),
+        database: configService.get<string>('DB_NAME'),
+        autoLoadModels: true,
+        synchronize: true
+      })
     }),
+    RedisModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public') // <-- Path to your static files
+    }),
+    ThrottlerModule.forRoot([
+      {
+        limit: 60,
+        name: 'short',
+        ttl: 1000
+      },
+      {
+        limit: 100,
+        name: 'medium',
+        ttl: 10000
+      },
+      {
+        limit: 100,
+        name: 'long',
+        ttl: 60000
+      }
+    ]),
     UserModule
   ],
   providers: [
     JwtStrategy,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard

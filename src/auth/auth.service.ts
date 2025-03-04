@@ -23,6 +23,8 @@ import { User } from '../user/user.entity';
 
 import * as dayjs from 'dayjs';
 import * as crypto from 'crypto';
+import { InferAttributes, NonNullFindOptions } from 'sequelize';
+
 
 @Injectable()
 export class AuthService {
@@ -136,6 +138,10 @@ export class AuthService {
     return this.users.findByPk(userId);
   }
 
+  async findProfile(userId: number): Promise<User | null> {
+    return this.users.findByPk(userId, { raw: true });
+  }
+
   async sendPasswordResetOtp(email: string): Promise<void> {
     const user = await this.findByEmail(email);
     if (!user) {
@@ -197,5 +203,9 @@ export class AuthService {
     }
 
     return await user.update({ password });
+  }
+
+  async revokeAccessToken(userId: number, refreshToken: string) {
+    return this.sessions.removeRefreshToken(userId, refreshToken);
   }
 }

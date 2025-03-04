@@ -15,15 +15,10 @@ import {
 
 import { User } from '../user/user.entity';
 
-export enum TokenType {
-  ACCESS = 'ACCESS',
-  REFRESH = 'REFRESH'
-}
-
 @DefaultScope(() => ({
   where: { deletedAt: null }
 }))
-@Table({ tableName: 'session_tokens', timestamps: true, paranoid: true })
+@Table({ tableName: 'SessionTokens', timestamps: true, paranoid: true })
 export class SessionToken extends Model<
   InferAttributes<SessionToken>,
   InferCreationAttributes<SessionToken>
@@ -33,20 +28,14 @@ export class SessionToken extends Model<
 
   @ForeignKey(() => User)
   @Column({ type: DataType.INTEGER, allowNull: false })
-  declare userId: number; // ✅ Use `declare` to avoid shadowing Sequelize attributes
-
-  @Column({
-    type: DataType.ENUM(...Object.values(TokenType)), // ✅ Use spread operator to define ENUM correctly
-    allowNull: false
-  })
-  declare typeOfToken: TokenType; // ✅ Use `declare`
+  declare userId: number;
 
   @Column({ allowNull: false })
-  declare refreshToken: string; // ✅ Use `declare`
+  declare refreshToken: string;
 
   @Column({ type: DataType.DATE, allowNull: false })
-  declare expiresAt: Date; // ✅ Use `declare`
+  declare expiresAt: Date;
 
   @Column({ type: DataType.DATE })
-  declare deletedAt: Date | null; // ✅ Use `declare` for soft delete
+  declare deletedAt: Date | null;
 }
