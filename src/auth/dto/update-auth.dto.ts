@@ -1,10 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
 import {
   IsOptional,
   IsPhoneNumber,
   IsString,
   MinLength
 } from 'class-validator';
+
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateAuthDto {
   @ApiProperty({

@@ -1,19 +1,17 @@
+import * as dayjs from 'dayjs';
+
 import {
   BadRequestException,
   ForbiddenException,
   Injectable,
-  UnauthorizedException,
+  UnauthorizedException
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 
-import { SessionToken } from './session-token.entity';
-
 import { RedisService } from '../redis/redis.service';
-
-import * as dayjs from 'dayjs';
-
+import { SessionToken } from './session-token.entity';
 
 export type JwtTokens = { accessToken: string; refreshToken: string };
 

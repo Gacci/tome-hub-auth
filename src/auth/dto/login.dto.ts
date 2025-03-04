@@ -1,17 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { IsOptional, IsString, Length, Matches } from 'class-validator';
 
-import {
-  IsOptional,
-  IsString,
-  Length,
-  Matches
-} from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 import { CredentialsDto } from './credentials.dto';
 
-
 export class LoginAuthDto extends CredentialsDto {
-  @ApiProperty({ example: '123456', description: 'One-Time Password (OTP)', required: false })
+  @ApiProperty({
+    example: '123456',
+    description: 'One-Time Password (OTP)',
+    required: false
+  })
   @IsOptional()
   @IsString()
   @Length(6)

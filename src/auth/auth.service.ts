@@ -1,3 +1,6 @@
+import * as crypto from 'crypto';
+import * as dayjs from 'dayjs';
+
 import {
   BadRequestException,
   ConflictException,
@@ -6,7 +9,6 @@ import {
   NotFoundException,
   UnauthorizedException
 } from '@nestjs/common';
-
 import { InjectModel } from '@nestjs/sequelize';
 
 import { MailerService } from '../mailer/mailer.service';
@@ -14,17 +16,10 @@ import {
   JwtTokens,
   SessionTokenService
 } from '../user-session/session-token.service';
-
+import { User } from '../user/user.entity';
 import { LoginAuthDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
-
-import { User } from '../user/user.entity';
-
-import * as dayjs from 'dayjs';
-import * as crypto from 'crypto';
-import { InferAttributes, NonNullFindOptions } from 'sequelize';
-
 
 @Injectable()
 export class AuthService {

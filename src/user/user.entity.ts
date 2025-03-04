@@ -1,20 +1,18 @@
-import {
-  Table,
-  Column,
-  Model,
-  DataType,
-  BeforeCreate,
-  BeforeUpdate,
-  DefaultScope
-} from 'sequelize-typescript';
-
+import * as bcrypt from 'bcryptjs';
 import {
   CreationOptional,
-  InferCreationAttributes,
-  InferAttributes
+  InferAttributes,
+  InferCreationAttributes
 } from 'sequelize';
-
-import * as bcrypt from 'bcryptjs';
+import {
+  BeforeCreate,
+  BeforeUpdate,
+  Column,
+  DataType,
+  DefaultScope,
+  Model,
+  Table
+} from 'sequelize-typescript';
 
 @DefaultScope(() => ({
   where: { deletedAt: null }

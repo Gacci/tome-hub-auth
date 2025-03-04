@@ -1,28 +1,25 @@
 import {
+  Body,
   Controller,
   Delete,
   Get,
-  Post,
-  Body,
-  ParseIntPipe,
   Param,
+  ParseIntPipe,
   Patch,
+  Post,
   Request
 } from '@nestjs/common';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { ApiTags, ApiResponse } from '@nestjs/swagger';
-
+import { JwtPayloadPassport } from '../common/interfaces/jwt-payload-passport.interface';
 import { AuthService } from './auth.service';
+import { Public } from './decorators/public.decorator';
 import { LoginAuthDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/token-refresh.dto';
+import { ProfileDto } from './dto/profile.dto';
 import { RegisterAuthDto } from './dto/register-auth.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RefreshTokenDto } from './dto/token-refresh.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
-
-import { Public } from './decorators/public.decorator';
-import { JwtPayloadPassport } from '../common/interfaces/jwt-payload-passport.interface';
-
-import { ProfileDto } from './dto/profile.dto';
 
 @ApiTags('Auth')
 @Controller('auth')

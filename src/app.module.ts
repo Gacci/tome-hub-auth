@@ -1,19 +1,18 @@
-import { APP_GUARD } from '@nestjs/core';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { join } from 'path';
+
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { PassportModule } from '@nestjs/passport';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
-import { join } from 'path';
-
+import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
-
-import { AuthModule } from './auth/auth.module';
-import { UserModule } from './user/user.module';
 import { RedisModule } from './redis/redis.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [

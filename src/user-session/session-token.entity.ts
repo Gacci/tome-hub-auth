@@ -1,17 +1,16 @@
 import {
-  Table,
-  Column,
-  Model,
-  ForeignKey,
-  DataType,
-  DefaultScope
-} from 'sequelize-typescript';
-
-import {
   CreationOptional,
   InferAttributes,
   InferCreationAttributes
 } from 'sequelize';
+import {
+  Column,
+  DataType,
+  DefaultScope,
+  ForeignKey,
+  Model,
+  Table
+} from 'sequelize-typescript';
 
 import { User } from '../user/user.entity';
 

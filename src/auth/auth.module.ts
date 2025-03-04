@@ -1,22 +1,17 @@
 import { Module } from '@nestjs/common';
-
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { SequelizeModule } from '@nestjs/sequelize';
 
-import { AuthService } from './auth.service';
-import { RedisService } from '../redis/redis.service';
-import { SessionTokenService } from '../user-session/session-token.service';
-
-import { JwtStrategy } from './strategies/jwt.strategy';
-
-import { AuthController } from './auth.controller';
-
 import { MailerModule } from '../mailer/mailer.module';
-
-import { User } from '../user/user.entity';
+import { RedisService } from '../redis/redis.service';
 import { SessionToken } from '../user-session/session-token.entity';
+import { SessionTokenService } from '../user-session/session-token.service';
+import { User } from '../user/user.entity';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   controllers: [AuthController],
