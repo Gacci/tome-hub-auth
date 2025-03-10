@@ -1,3 +1,5 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 import {
   IsOptional,
   IsPhoneNumber,
@@ -5,14 +7,12 @@ import {
   MinLength
 } from 'class-validator';
 
-import { ApiProperty } from '@nestjs/swagger';
-
 export class UpdateAuthDto {
   @ApiProperty({
-    example: 'John',
     description: "User's first name",
-    required: false,
-    nullable: true
+    example: 'John',
+    nullable: true,
+    required: false
   })
   @IsOptional()
   @IsString()
@@ -20,10 +20,10 @@ export class UpdateAuthDto {
   firstName?: string | null;
 
   @ApiProperty({
-    example: 'Doe',
     description: "User's last name",
-    required: false,
-    nullable: true
+    example: 'Doe',
+    nullable: true,
+    required: false
   })
   @IsOptional()
   @IsString()
@@ -31,22 +31,26 @@ export class UpdateAuthDto {
   lastName?: string | null;
 
   @ApiProperty({
-    example: '+15551234567',
     description: "User's cell phone number in international format",
-    required: false,
-    nullable: true
+    example: '+15551234567',
+    nullable: true,
+    required: false
   })
   @IsOptional()
   @IsPhoneNumber()
   cellPhoneNumber?: string | null;
 
   @ApiProperty({
-    example: 'Verizon',
     description: "User's cell phone carrier",
-    required: false,
-    nullable: true
+    example: 'Verizon',
+    nullable: true,
+    required: false
   })
   @IsOptional()
   @IsString()
   cellPhoneCarrier?: string | null;
+
+  @IsOptional()
+  @IsString()
+  profilePictureUrl?: string | null;
 }

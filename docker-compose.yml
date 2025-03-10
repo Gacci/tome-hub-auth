@@ -1,0 +1,67 @@
+services:
+  auth-mysql:
+    image: "mysql:8.0"
+    container_name: auth-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      MYSQL_ROOT_USERNAME: ${DB_USER}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_TIMEZONE: "UTC"
+    healthcheck:
+      test: ["CMD", "mysql", "-h", "auth-mysql", "-u", "${DB_USER}", "-p${DB_PASS}", "-e", "SELECT 1"]
+      interval: 30s
+      retries: 3
+      start_period: 60s
+      timeout: 30s
+    networks:
+      - auth-network
+    ports:
+      - "3306:3306"
+    restart: always
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - auth_mysql_data:/data
+
+  auth-redis:
+    image: "redis"
+    container_name: auth-redis
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 30s
+    networks:
+      - auth-network
+    ports:
+      - "6379"
+    restart: always
+    volumes:
+      - auth_redis_data:/var/lib/redis  # Persistent Redis data
+
+  app:
+    build:
+      context: "."
+    container_name: auth-app
+    depends_on:
+      - auth-mysql
+      - auth-redis
+    entrypoint: ["./wait-for-it.sh", "auth-mysql:3306", "--", "node", "dist/main.js"]
+    networks:
+      - auth-network
+    ports:
+      - "3000:3000"
+    restart: always
+    volumes:
+      - .env:/app/.env  # Mount the local .env file into the container
+
+volumes:
+  auth_mysql_data:
+    driver: local
+  auth_redis_data:
+    driver: local
+
+
+networks:
+  auth-network:
+    driver: bridge

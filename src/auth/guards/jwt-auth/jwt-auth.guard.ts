@@ -1,10 +1,10 @@
-import { Observable } from 'rxjs';
-
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { Observable } from 'rxjs';
+
+import { IS_PUBLIC_KEY } from '../../decorators/public.decorator';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -20,7 +20,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getHandler()
     );
 
-    console.log('@Public: ', isPublic);
     if (isPublic) {
       return true; // Allow public routes
     }

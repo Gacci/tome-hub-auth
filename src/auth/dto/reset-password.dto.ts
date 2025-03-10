@@ -1,3 +1,5 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 import {
   IsEmail,
   IsNotEmpty,
@@ -8,25 +10,23 @@ import {
   MinLength
 } from 'class-validator';
 
-import { ApiProperty } from '@nestjs/swagger';
-
-import { Match } from '../../common/decorators/match.decorator';
+import { Match } from '../../common/validators/match.decorator';
 
 export class ResetPasswordDto {
   @ApiProperty({
-    example: 'user@example.com',
-    description: "User's registered email address"
+    description: "User's registered email address",
+    example: 'user@example.com'
   })
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
   @ApiProperty({
-    example: 'NewPassword123!',
     description:
       'New password (must contain uppercase, lowercase, numbers, or special characters)',
-    minLength: 4,
-    maxLength: 20
+    example: 'NewPassword123!',
+    maxLength: 20,
+    minLength: 4
   })
   @IsString()
   @IsNotEmpty()
@@ -38,8 +38,8 @@ export class ResetPasswordDto {
   newPassword: string;
 
   @ApiProperty({
-    example: 'NewPassword123!',
-    description: 'Confirmation of the new password (must match newPassword)'
+    description: 'Confirmation of the new password (must match newPassword)',
+    example: 'NewPassword123!'
   })
   @IsString()
   @IsNotEmpty()
@@ -47,10 +47,10 @@ export class ResetPasswordDto {
   confirmation: string;
 
   @ApiProperty({
-    example: '123456',
     description: "One-Time Password (OTP) sent to the user's email",
-    minLength: 6,
-    maxLength: 6
+    example: '123456',
+    maxLength: 6,
+    minLength: 6
   })
   @IsString()
   @IsNotEmpty()

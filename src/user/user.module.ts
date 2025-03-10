@@ -5,8 +5,8 @@ import { User } from './user.entity';
 import { UserService } from './user.service';
 
 @Module({
+  exports: [UserService, SequelizeModule], // Export SequelizeModule so it can be used in AuthModule
   imports: [SequelizeModule.forFeature([User])],
-  providers: [UserService],
-  exports: [UserService, SequelizeModule] // Export SequelizeModule so it can be used in AuthModule
+  providers: [UserService]
 })
 export class UserModule {}
