@@ -6,15 +6,15 @@ import { SequelizeModule } from '@nestjs/sequelize';
 
 import { MailerModule } from '../mailer/mailer.module';
 import { RedisService } from '../redis/redis.service';
-import { SessionToken } from '../user-session/session-token.entity';
-import { SessionTokenService } from '../user-session/session-token.service';
 import { User } from '../user/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { SessionToken } from './entities/session-token.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   controllers: [AuthController],
+  exports: [AuthService, JwtStrategy, JwtModule, PassportModule, RedisService],
   imports: [
     ConfigModule.forRoot(),
     JwtModule.registerAsync({
@@ -27,9 +27,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     }),
     MailerModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    SequelizeModule.forFeature([User, SessionToken])
+    SequelizeModule.forFeature([SessionToken, User])
   ],
-  providers: [AuthService, JwtStrategy, RedisService, SessionTokenService],
-  exports: [AuthService, JwtStrategy, PassportModule, RedisService, JwtModule]
+  providers: [AuthService, JwtStrategy, RedisService]
 })
 export class AuthModule {}

@@ -28,16 +28,22 @@ export class ProfileDto {
   cellPhoneCarrier: string;
 
   @Exclude()
+  verifyAccountOtp: string;
+
+  @Exclude()
+  verifyAccountOtpIssuedAt: string;
+
+  @Exclude()
   loginOtp: string;
 
   @Exclude()
-  loginOtpExpiresAt: string;
+  loginOtpIssuedAt: string;
 
   @Exclude()
   resetPasswordOtp: string;
 
   @Exclude()
-  resetPasswordOtpExpiresAt: string;
+  resetPasswordOtpIssuedAt: string;
 
   @Exclude()
   deletedAt: Date;
@@ -45,7 +51,7 @@ export class ProfileDto {
   @Expose()
   createdAt: Date;
 
-  constructor(partial: Partial<User | null>) {
-    Object.assign(this, partial);
+  constructor(user: Partial<User | null>) {
+    Object.assign(this, user instanceof User ? user.toJSON() : user);
   }
 }
