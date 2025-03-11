@@ -2,24 +2,37 @@ import {
   Body,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
+  Headers,
+  HttpCode,
+  HttpStatus,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   ParseIntPipe,
   Patch,
   Post,
-  Request
+  Request,
+  UploadedFile,
+  UseInterceptors
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { JwtPayloadPassport } from '../common/interfaces/jwt-payload-passport.interface';
+import { SuccessResponse } from '../common/decorators/success-response.decorator';
+import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { userProfileStorage } from '../common/storage/user-profile-storage';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
+import { CredentialsDto } from './dto/credentials.dto';
 import { LoginAuthDto } from './dto/login.dto';
+import { ProfilePictureUrlDto } from './dto/profile-picture-url.dto';
 import { ProfileDto } from './dto/profile.dto';
 import { RegisterAuthDto } from './dto/register-auth.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { RefreshTokenDto } from './dto/token-refresh.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
+import { VerifyAccountDto } from './dto/verify-account.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -27,75 +40,133 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Public()
-  @Post('accounts/register')
-  create(@Body() createAuthDto: RegisterAuthDto) {
-    return this.auth.register(createAuthDto.email, createAuthDto.password);
+  @Post('account/register')
+  @SuccessResponse('Successfully uploaded profile image.')
+  async create(@Body() createAuthDto: RegisterAuthDto) {
+    await this.auth.register(createAuthDto.email, createAuthDto.password);
   }
 
   @Public()
-  @Post('accounts/login')
-  login(@Body() loginAuthDto: LoginAuthDto) {
-    return this.auth.login(loginAuthDto);
+  @HttpCode(HttpStatus.OK)
+  @Post(['account/register/otp/send', 'account/register/otp/resend'])
+  @SuccessResponse(
+    'You will receive an OTP if we are able to match you in our records.'
+  )
+  async sendRegisterOtp(@Body() body: { email: string }) {
+    await this.auth.sendRegisterOtp(body.email);
   }
 
   @Public()
-  @Post('accounts/login/otp')
-  sendLoginOtp(@Body() body: { email: string }) {
-    return this.auth.sendLoginOtp(body.email);
+  @HttpCode(HttpStatus.OK)
+  @Post('account/register/otp/verify')
+  @SuccessResponse('You account has been successfully verified.')
+  async verifyAccount(@Body() body: VerifyAccountDto) {
+    await this.auth.verifyAccount(body);
   }
 
-  @Get('accounts/:id')
+  @Public()
+  @Post('account/login')
+  @SuccessResponse('Login successful.')
+  async login(@Body() loginAuthDto: LoginAuthDto) {
+    return await this.auth.login(loginAuthDto);
+  }
+
+  @Public()
+  @Post('account/login/otp/resend')
+  @SuccessResponse('Check your inbox for your OTP.')
+  async resendLoginOtp(@Body() loginAuthDto: CredentialsDto) {
+    return this.auth.sendLoginOtp(loginAuthDto);
+  }
+
+  @Get('account/:id')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return new ProfileDto(await this.auth.findProfile(id));
   }
 
-  @Patch('accounts/:id')
-  update(
+  @Patch('account/:id')
+  @HttpCode(HttpStatus.OK)
+  async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAuthDto: UpdateAuthDto
   ) {
-    return this.auth.update(id, updateAuthDto);
+    return new ProfileDto(await this.auth.update(id, updateAuthDto));
   }
 
-  @Delete('accounts/:id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.auth.remove(id);
+  @Delete('account/:id')
+  @HttpCode(HttpStatus.OK)
+  @SuccessResponse('Account deleted successfully')
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.auth.remove(id);
+  }
+
+  @Post('account/image')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file', { storage: userProfileStorage }))
+  async setProfilePicture(
+    @Request() req: { user: JwtPayload },
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5000000 }),
+          new FileTypeValidator({ fileType: 'image/jpeg' })
+        ]
+      })
+    )
+    uploaded: Express.Multer.File
+  ) {
+    return {
+      data: new ProfilePictureUrlDto(
+        await this.auth.update(+req.user.sub, {
+          profilePictureUrl: uploaded.filename
+        })
+      ),
+      message: 'Successfully uploaded profile image.'
+    };
   }
 
   @Public()
-  @Post(['passwords/otp/send', 'password/otp/resend'])
-  sendPasswordOtp(@Body() body: { email: string }) {
-    return this.auth.sendPasswordResetOtp(body.email);
+  @Post(['password/otp/resend', 'password/otp/send'])
+  @SuccessResponse('Check your inbox for your OTP.')
+  async sendPasswordOtp(@Body() body: { email: string }) {
+    await this.auth.sendPasswordResetOtp(body.email);
   }
 
   @Public()
-  @Post('passwords/reset')
-  @ApiResponse({ status: 200, description: 'Password reset successfully.' })
-  resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    return this.auth.resetPassword(resetPasswordDto);
+  @Post('password/reset')
+  @HttpCode(HttpStatus.OK)
+  @SuccessResponse('You password has been reset successfully.')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    await this.auth.resetPassword(resetPasswordDto);
   }
 
   @Post('password/:id')
-  updatePassword(
-    @Request() req: { user: JwtPayloadPassport },
+  @HttpCode(HttpStatus.OK)
+  @SuccessResponse('You password has been successfully changed.')
+  async updatePassword(
+    @Request() req: { user: JwtPayload },
     @Body() body: { newPassword: string }
   ) {
-    return this.auth.updatePassword(req.user.sub, body.newPassword);
+    await this.auth.updatePassword(+req.user.sub, body.newPassword);
   }
 
-  @Post('tokens/refresh')
-  refreshTokens(
-    @Request() req: { user: JwtPayloadPassport },
-    @Body() body: RefreshTokenDto
-  ) {
-    return this.auth.updatePassword(req.user.sub, body.refreshToken);
+  @Post('token/access/refresh')
+  async refreshTokens(@Request() req: { user: JwtPayload }) {
+    return await this.auth.exchangeAccessToken(req.user);
   }
 
-  @Delete('tokens/revoke')
-  revokeTokens(
-    @Request() req: { user: JwtPayloadPassport },
-    @Body() body: RefreshTokenDto
-  ) {
-    return this.auth.revokeAccessToken(req.user.sub, body.refreshToken);
+  @Delete('token/refresh/revoke')
+  @HttpCode(HttpStatus.OK)
+  @SuccessResponse('Refresh token has been successfully revoked.')
+  async revokeTokens(@Request() req: { user: JwtPayload }) {
+    await this.auth.revokeRefreshToken(req.user);
+  }
+
+  @Post('token/active')
+  async active(@Headers('authorization') headers: { authorization: string }) {
+    return {
+      active: !(await this.auth.isTokenBlacklisted(
+        headers.authorization.replace(/^Bearer\s/, '')
+      ))
+    };
   }
 }

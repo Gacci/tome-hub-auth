@@ -1,15 +1,15 @@
-import { join } from 'path';
-
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { PassportModule } from '@nestjs/passport';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
+import { join } from 'path';
+
 import { AuthModule } from './auth/auth.module';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from './auth/guards/jwt-auth/jwt-auth.guard';
+import { BlacklistGuard } from './auth/guards/jwt-token-blacklist/jwt-token-blacklist.guard';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
 import { RedisModule } from './redis/redis.module';
 import { UserModule } from './user/user.module';
@@ -18,24 +18,24 @@ import { UserModule } from './user/user.module';
   imports: [
     AuthModule,
     ConfigModule.forRoot(),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    RedisModule,
     SequelizeModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
+        autoLoadModels: true,
+        database: configService.get<string>('DB_NAME'),
         dialect: 'mysql',
         host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USER'),
         password: configService.get<string>('DB_PASS'),
-        database: configService.get<string>('DB_NAME'),
-        autoLoadModels: true,
-        synchronize: true
+        port: configService.get<number>('DB_PORT'),
+        synchronize: true,
+        timezone: configService.get<string>('DB_TZ'),
+        username: configService.get<string>('DB_USER')
       })
     }),
-    RedisModule,
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'public') // <-- Path to your static files
+      rootPath: join(__dirname, '..', 'public')
     }),
     ThrottlerModule.forRoot([
       {
@@ -65,6 +65,10 @@ import { UserModule } from './user/user.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard
+    },
+    {
+      provide: APP_GUARD,
+      useClass: BlacklistGuard
     }
   ]
 })

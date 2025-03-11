@@ -7,21 +7,21 @@ import {
 export function Match(property: string, validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string) {
     registerDecorator({
-      name: 'Match',
-      target: object.constructor,
-      propertyName,
       constraints: [property],
+      name: 'Match',
       options: validationOptions,
+      propertyName,
+      target: object.constructor,
       validator: {
+        defaultMessage(args: ValidationArguments) {
+          return `${args.property} must match ${args.constraints[0]}`;
+        },
         validate(value: any, args: ValidationArguments) {
           console.log(value, args);
           const [relatedPropertyName] = args.constraints;
           const relatedValue = (args.object as any)[relatedPropertyName];
           return value === relatedValue;
           // return false;
-        },
-        defaultMessage(args: ValidationArguments) {
-          return `${args.property} must match ${args.constraints[0]}`;
         }
       }
     });

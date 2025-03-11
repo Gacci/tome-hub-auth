@@ -1,14 +1,14 @@
-import { IsNotEmpty, IsString } from 'class-validator';
-
 import { ApiProperty } from '@nestjs/swagger';
 
-import { Match } from '../../common/decorators/match.decorator';
+import { IsNotEmpty, IsString } from 'class-validator';
+
+import { Match } from '../../common/validators/match.decorator';
 import { CredentialsDto } from './credentials.dto';
 
 export class RegisterAuthDto extends CredentialsDto {
   @ApiProperty({
-    example: 'NewPassword123!',
-    description: 'Confirm password'
+    description: 'Confirm password',
+    example: 'NewPassword123!'
   })
   @IsString()
   @IsNotEmpty()
