@@ -39,11 +39,29 @@ services:
     volumes:
       - auth_redis_data:/var/lib/redis  # Persistent Redis data
 
+  auth-localstack:
+    image: localstack/localstack
+    container_name: auth-localstack
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:4566"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 30s
+    networks:
+      - auth-network
+    ports:
+      - "4566:4566"
+    restart: always
+    volumes:
+      - auth_localstack_data:/var/lib/localstack
+
   app:
     build:
       context: "."
     container_name: auth-app
     depends_on:
+      - auth-localstack
       - auth-mysql
       - auth-redis
     entrypoint: ["./wait-for-it.sh", "auth-mysql:3306", "--", "node", "dist/main.js"]
@@ -56,6 +74,8 @@ services:
       - .env:/app/.env  # Mount the local .env file into the container
 
 volumes:
+  auth_localstack_data:
+    driver: local
   auth_mysql_data:
     driver: local
   auth_redis_data:

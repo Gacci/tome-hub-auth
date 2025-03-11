@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth/jwt-auth.guard';
 import { BlacklistGuard } from './auth/guards/jwt-token-blacklist/jwt-token-blacklist.guard';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
+import { AwsModule } from './aws/aws.module';
 import { RedisModule } from './redis/redis.module';
 import { UserModule } from './user/user.module';
 
@@ -54,7 +55,8 @@ import { UserModule } from './user/user.module';
         ttl: 60000
       }
     ]),
-    UserModule
+    UserModule,
+    AwsModule
   ],
   providers: [
     JwtStrategy,
