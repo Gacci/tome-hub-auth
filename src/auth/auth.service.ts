@@ -139,20 +139,19 @@ export class AuthService {
 
     if (user.is2faEnrolled) {
       if (!credentials.loginOtp) {
-        throw new UnauthorizedException('Login OTP required.');
-      }
-
-      // If 2FA is enabled, issue OTP first
-      if (!user.loginOtp) {
         const loginOtp = this.generateOtp(6);
         await this.mailer.sendLoginOtp(user.email, loginOtp);
         await user.update({ loginOtp });
 
-        throw new UnauthorizedException('Login OTP sent. Please verify.');
+        throw new UnauthorizedException('Login OTP required.');
       }
 
-      if (!user.loginOtpIssuedAt || this.isOtpExpired(user.loginOtpIssuedAt)) {
-        throw new BadRequestException('Login OTP has expired.');
+      if (!user.loginOtp || !user.loginOtpIssuedAt) {
+        throw new UnauthorizedException('Invalid login token. Please request a new one.');
+      }
+
+      if (this.isOtpExpired(user.loginOtpIssuedAt)) {
+        throw new BadRequestException('Login OTP has expired. Please request a new one.');
       }
 
       if (user.loginOtp !== credentials.loginOtp) {
