@@ -25,6 +25,7 @@ import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { userProfileStorage } from '../common/storage/user-profile-storage';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
+import { CredentialsDto } from './dto/credentials.dto';
 import { LoginAuthDto } from './dto/login.dto';
 import { ProfilePictureUrlDto } from './dto/profile-picture-url.dto';
 import { ProfileDto } from './dto/profile.dto';
@@ -32,7 +33,6 @@ import { RegisterAuthDto } from './dto/register-auth.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
-import {CredentialsDto} from "./dto/credentials.dto";
 
 @ApiTags('Auth')
 @Controller('auth')
