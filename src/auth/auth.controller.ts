@@ -212,8 +212,8 @@ export class AuthController {
     description: 'Refreshes access token.',
     status: HttpStatus.OK
   })
-  @SuccessResponse('Refresh token has been successfully refreshed.')
-  async refreshTokens(@Request() req: { user: JwtPayload }) {
+  @SuccessResponse('Access token has been successfully refreshed.')
+  async refreshAccessToken(@Request() req: { user: JwtPayload }) {
     return await this.auth.exchangeAccessToken(req.user);
   }
 
@@ -221,7 +221,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ description: 'Revokes refresh token.', status: HttpStatus.OK })
   @SuccessResponse('Refresh token has been successfully revoked.')
-  async revokeTokens(@Request() req: { user: JwtPayload }) {
+  async revokeRefreshTokens(@Request() req: { user: JwtPayload }) {
     await this.auth.revokeRefreshToken(req.user);
   }
 
