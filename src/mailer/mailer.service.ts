@@ -15,7 +15,7 @@ export class MailerService {
           otp
         },
         subject: 'Registration OTP',
-        template: './registration',
+        template: './registration-otp',
         text: `Your OTP for account verification is: ${otp}`,
         to: email
       });

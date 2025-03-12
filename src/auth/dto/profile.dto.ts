@@ -18,7 +18,7 @@ export class ProfileDto {
   @Expose()
   lastName: string;
 
-  @Exclude()
+  @Expose()
   is2faEnrolled: boolean;
 
   @Exclude()
