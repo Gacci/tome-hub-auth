@@ -106,6 +106,7 @@ export class AuthController {
     description: 'Reads user profile specified by `id`',
     status: HttpStatus.OK
   })
+  @SuccessResponse('Success')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return new ProfileDto(await this.auth.findProfile(id));
   }
@@ -116,6 +117,7 @@ export class AuthController {
     description: 'Updates user specified by `id`',
     status: HttpStatus.OK
   })
+  @SuccessResponse('Success')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAuthDto: UpdateAuthDto
@@ -129,7 +131,7 @@ export class AuthController {
     description: 'Deletes user specified by `id`',
     status: HttpStatus.OK
   })
-  @SuccessResponse('Account deleted successfully')
+  @SuccessResponse('Account deleted successfully.')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.auth.remove(id);
   }
@@ -140,6 +142,7 @@ export class AuthController {
     description: 'Updates profile image for authenticated user.',
     status: HttpStatus.OK
   })
+  @SuccessResponse('Successfully uploaded profile image.')
   @UseInterceptors(FileInterceptor('file')) // { storage: userProfileStorage }
   async setProfilePicture(
     @Request() req: { user: JwtPayload },
@@ -158,15 +161,12 @@ export class AuthController {
       uploaded
     );
 
-    return {
-      data: new ProfilePictureUrlDto(
-        await this.auth.update(+req.user.sub, {
-          // profilePictureUrl: uploaded.filename
-          profilePictureUrl: response.filename
-        })
-      ),
-      message: 'Successfully uploaded profile image.'
-    };
+    new ProfilePictureUrlDto(
+      await this.auth.update(+req.user.sub, {
+        // profilePictureUrl: uploaded.filename
+        profilePictureUrl: response.filename
+      })
+    );
   }
 
   @Public()
@@ -212,6 +212,7 @@ export class AuthController {
     description: 'Refreshes access token.',
     status: HttpStatus.OK
   })
+  @SuccessResponse('Refresh token has been successfully refreshed.')
   async refreshTokens(@Request() req: { user: JwtPayload }) {
     return await this.auth.exchangeAccessToken(req.user);
   }
@@ -229,6 +230,7 @@ export class AuthController {
     description: 'Verifies whether a token is an active token.',
     status: HttpStatus.OK
   })
+  @SuccessResponse('Session status')
   async active(@Headers('authorization') headers: { authorization: string }) {
     return {
       active: !(await this.auth.isTokenBlacklisted(
