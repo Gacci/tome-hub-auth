@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { SequelizeModule } from '@nestjs/sequelize';
 
 import { AwsConfigService } from '../aws/aws-config.service';
+import { CheckUserAccessGuard } from '../guards/user-access/check-user-access.guard';
 import { MailerModule } from '../mailer/mailer.module';
 import { RedisService } from '../redis/redis.service';
 import { User } from '../user/user.entity';
@@ -30,6 +31,12 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     SequelizeModule.forFeature([SessionToken, User])
   ],
-  providers: [AwsConfigService, AuthService, JwtStrategy, RedisService]
+  providers: [
+    AwsConfigService,
+    AuthService,
+    JwtStrategy,
+    RedisService,
+    CheckUserAccessGuard
+  ]
 })
 export class AuthModule {}
