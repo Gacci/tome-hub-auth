@@ -20,7 +20,7 @@ export class ResponseInterceptor implements NestInterceptor {
       SUCCESS_RESPONSE,
       context.getHandler()
     );
-    console.log(message);
+
     return next
       .handle()
       .pipe(
