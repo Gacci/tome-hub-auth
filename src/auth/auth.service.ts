@@ -286,6 +286,16 @@ export class AuthService {
     return await this.redis.getKey(jwtRawToken);
   }
 
+  async verifyTokenStatus(
+    jwtRawToken: string
+  ): Promise<{ [key: string]: any }> {
+    const decoded = this.jwtService.decode<JwtPayload>(jwtRawToken);
+    return {
+      blacklisted: !!(await this.redis.getKey(jwtRawToken)),
+      type: decoded.type
+    };
+  }
+
   async revokeRefreshToken(decodedRefreshToken: JwtPayload): Promise<void> {
     if (TokenType.REFRESH !== decodedRefreshToken.type) {
       throw new UnauthorizedException(

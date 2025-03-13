@@ -71,7 +71,7 @@ export class AuthController {
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('account/register/verify')
+  @Post('account/verify')
   @ApiResponse({
     description: 'Verifies OTP for user to confirm registration.',
     status: HttpStatus.OK
@@ -225,17 +225,16 @@ export class AuthController {
     await this.auth.revokeRefreshToken(req.user);
   }
 
-  @Post('token/active')
+  @Post('token/status')
+  @HttpCode(HttpStatus.OK)
   @ApiResponse({
     description: 'Verifies whether a token is an active token.',
     status: HttpStatus.OK
   })
-  @SuccessResponse('Session status')
-  async active(@Headers('authorization') headers: { authorization: string }) {
-    return {
-      active: !(await this.auth.isTokenBlacklisted(
-        headers.authorization.replace(/^Bearer\s/, '')
-      ))
-    };
+  @SuccessResponse('Token status successfully verified.')
+  async verifyTokenStatus(@Headers() headers: { authorization: string }) {
+    return await this.auth.verifyTokenStatus(
+      headers.authorization.replace(/^Bearer\s/, '')
+    );
   }
 }
