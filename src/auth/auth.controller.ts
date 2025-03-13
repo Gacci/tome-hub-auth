@@ -22,7 +22,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
-import { CheckUserAccess } from '../common/decorators/check-user-access.decorator';
 import { SuccessResponse } from '../common/decorators/success-response.decorator';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { CheckUserAccessGuard } from '../guards/user-access/check-user-access.guard';
