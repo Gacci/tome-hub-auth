@@ -108,4 +108,8 @@ export class User extends Model<
   async isSamePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.getDataValue('password'));
   }
+
+  static async exists(where: Partial<InferAttributes<User>>) {
+    return await User.findOne({ attributes: ['1'], raw: true, where });
+  }
 }
