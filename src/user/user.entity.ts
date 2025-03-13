@@ -45,7 +45,7 @@ export class User extends Model<
   @Column({ allowNull: true, type: DataType.STRING(255) })
   declare profilePictureUrl?: string | null;
 
-  @Column({ allowNull: true, type: DataType.BOOLEAN })
+  @Column({ allowNull: false, defaultValue: false, type: DataType.BOOLEAN })
   declare is2faEnrolled?: boolean;
 
   @Column({ allowNull: true, type: DataType.STRING(16) })
@@ -106,12 +106,6 @@ export class User extends Model<
   }
 
   async isSamePassword(password: string): Promise<boolean> {
-    console.log(
-      password,
-      await bcrypt.hash(password, 10),
-      this.getDataValue('password'),
-      await bcrypt.compare(password, this.getDataValue('password'))
-    );
     return bcrypt.compare(password, this.getDataValue('password'));
   }
 }

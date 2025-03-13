@@ -15,6 +15,7 @@ import {
   Post,
   Request,
   UploadedFile,
+  UseGuards,
   UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -23,6 +24,7 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
 import { SuccessResponse } from '../common/decorators/success-response.decorator';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { CheckUserAccessGuard } from '../guards/user-access/check-user-access.guard';
 // import { userProfileStorage } from '../common/storage/user-profile-storage';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
@@ -71,7 +73,7 @@ export class AuthController {
 
   @Public()
   @HttpCode(HttpStatus.OK)
-  @Post('account/register/verify')
+  @Post('account/verify')
   @ApiResponse({
     description: 'Verifies OTP for user to confirm registration.',
     status: HttpStatus.OK
@@ -106,16 +108,20 @@ export class AuthController {
     description: 'Reads user profile specified by `id`',
     status: HttpStatus.OK
   })
+  @SuccessResponse('Success')
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return new ProfileDto(await this.auth.findProfile(id));
   }
 
   @Patch('account/:id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(CheckUserAccessGuard)
+  // @CheckUserAccess({ withLocalKey: 'subs', withRequestKey: 'id' })
   @ApiResponse({
     description: 'Updates user specified by `id`',
     status: HttpStatus.OK
   })
+  @SuccessResponse('Success')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAuthDto: UpdateAuthDto
@@ -125,11 +131,12 @@ export class AuthController {
 
   @Delete('account/:id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(CheckUserAccessGuard)
   @ApiResponse({
     description: 'Deletes user specified by `id`',
     status: HttpStatus.OK
   })
-  @SuccessResponse('Account deleted successfully')
+  @SuccessResponse('Account deleted successfully.')
   async remove(@Param('id', ParseIntPipe) id: number) {
     await this.auth.remove(id);
   }
@@ -140,6 +147,7 @@ export class AuthController {
     description: 'Updates profile image for authenticated user.',
     status: HttpStatus.OK
   })
+  @SuccessResponse('Successfully uploaded profile image.')
   @UseInterceptors(FileInterceptor('file')) // { storage: userProfileStorage }
   async setProfilePicture(
     @Request() req: { user: JwtPayload },
@@ -158,15 +166,12 @@ export class AuthController {
       uploaded
     );
 
-    return {
-      data: new ProfilePictureUrlDto(
-        await this.auth.update(+req.user.sub, {
-          // profilePictureUrl: uploaded.filename
-          profilePictureUrl: response.filename
-        })
-      ),
-      message: 'Successfully uploaded profile image.'
-    };
+    new ProfilePictureUrlDto(
+      await this.auth.update(+req.user.sub, {
+        // profilePictureUrl: uploaded.filename
+        profilePictureUrl: response.filename
+      })
+    );
   }
 
   @Public()
@@ -212,7 +217,8 @@ export class AuthController {
     description: 'Refreshes access token.',
     status: HttpStatus.OK
   })
-  async refreshTokens(@Request() req: { user: JwtPayload }) {
+  @SuccessResponse('Access token has been successfully refreshed.')
+  async refreshAccessToken(@Request() req: { user: JwtPayload }) {
     return await this.auth.exchangeAccessToken(req.user);
   }
 
@@ -220,20 +226,20 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({ description: 'Revokes refresh token.', status: HttpStatus.OK })
   @SuccessResponse('Refresh token has been successfully revoked.')
-  async revokeTokens(@Request() req: { user: JwtPayload }) {
+  async revokeRefreshTokens(@Request() req: { user: JwtPayload }) {
     await this.auth.revokeRefreshToken(req.user);
   }
 
-  @Post('token/active')
+  @Post('token/status')
+  @HttpCode(HttpStatus.OK)
   @ApiResponse({
     description: 'Verifies whether a token is an active token.',
     status: HttpStatus.OK
   })
-  async active(@Headers('authorization') headers: { authorization: string }) {
-    return {
-      active: !(await this.auth.isTokenBlacklisted(
-        headers.authorization.replace(/^Bearer\s/, '')
-      ))
-    };
+  @SuccessResponse('Token status successfully verified.')
+  async verifyTokenStatus(@Headers() headers: { authorization: string }) {
+    return await this.auth.verifyTokenStatus(
+      headers.authorization.replace(/^Bearer\s/, '')
+    );
   }
 }

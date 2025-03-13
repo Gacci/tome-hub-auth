@@ -1,7 +1,3 @@
-import * as crypto from 'crypto';
-import dayjs from 'dayjs';
-import { Op } from 'sequelize';
-
 import {
   BadRequestException,
   ConflictException,
@@ -14,10 +10,15 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 
+import * as crypto from 'crypto';
+import dayjs from 'dayjs';
+import { Op } from 'sequelize';
+
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { MailerService } from '../mailer/mailer.service';
 import { RedisService } from '../redis/redis.service';
 import { User } from '../user/user.entity';
+import { CredentialsDto } from './dto/credentials.dto';
 import { LoginAuthDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
@@ -27,10 +28,10 @@ import {
   TokenStatus,
   TokenType
 } from './entities/session-token.entity';
-import {CredentialsDto} from "./dto/credentials.dto";
 
 // export type JwtPayload = { exp?: number; sub: number; ref: string; type?: TokenType; };
 export type JwtTokens = { accessToken: string; refreshToken: string };
+export type JwtStatus = { blacklisted: boolean; type: TokenType; };
 
 @Injectable()
 export class AuthService {
@@ -125,10 +126,15 @@ export class AuthService {
   }
 
   async login(credentials: LoginAuthDto): Promise<JwtTokens | null> {
-    const user = await this.users.scope('fullDataView')
+    const user = await this.users
+      .scope('fullDataView')
       .findOne({ where: { email: credentials.email } });
     if (!user) {
       throw new NotFoundException('User not found.');
+    }
+
+    if (!user.isAccountVerified) {
+      throw new UnauthorizedException('Your account is not verified.');
     }
 
     if (!(await user.isSamePassword(credentials.password))) {
@@ -147,11 +153,15 @@ export class AuthService {
       }
 
       if (!user.loginOtp || !user.loginOtpIssuedAt) {
-        throw new UnauthorizedException('Invalid login token. Please request a new one.');
+        throw new UnauthorizedException(
+          'Invalid login token. Please request a new one.'
+        );
       }
 
       if (this.isOtpExpired(user.loginOtpIssuedAt)) {
-        throw new BadRequestException('Login OTP has expired. Please request a new one.');
+        throw new BadRequestException(
+          'Login OTP has expired. Please request a new one.'
+        );
       }
 
       if (user.loginOtp !== credentials.loginOtp) {
@@ -166,7 +176,8 @@ export class AuthService {
   }
 
   async sendLoginOtp(credentials: CredentialsDto): Promise<void> {
-    const user = await this.users.scope('fullDataView')
+    const user = await this.users
+      .scope('fullDataView')
       .findOne({ where: { email: credentials.email } });
 
     if (!user) {
@@ -276,6 +287,16 @@ export class AuthService {
     return await this.redis.getKey(jwtRawToken);
   }
 
+  async verifyTokenStatus(
+    jwtRawToken: string
+  ): Promise<JwtStatus> {
+    const decoded = this.jwtService.decode<JwtPayload>(jwtRawToken);
+    return {
+      blacklisted: !!(await this.redis.getKey(jwtRawToken)),
+      type: decoded.type as TokenType
+    };
+  }
+
   async revokeRefreshToken(decodedRefreshToken: JwtPayload): Promise<void> {
     if (TokenType.REFRESH !== decodedRefreshToken.type) {
       throw new UnauthorizedException(
@@ -286,7 +307,10 @@ export class AuthService {
     const sessions = await this.sessions.findAll({
       where: {
         createdAt: {
-          [Op.gte]: dayjs(decodedRefreshToken.exp).utc().toDate()
+          [Op.gte]: dayjs
+            .unix(decodedRefreshToken.exp as number)
+            .utc()
+            .toDate()
         },
         familyId: decodedRefreshToken.ref,
         status: TokenStatus.ACTIVE,
@@ -300,7 +324,10 @@ export class AuthService {
       await this.redis.setKey(
         session.token,
         session.userId.toString(),
-        dayjs.unix(<number>decoded.exp).utc().diff(dayjs().utc(), 'second')
+        dayjs
+          .unix(decoded.exp as number)
+          .utc()
+          .diff(dayjs().utc(), 'second')
       );
     }
   }
@@ -333,11 +360,14 @@ export class AuthService {
   async deactivateAccessToken(
     familyToken: JwtPayload,
     status: Exclude<TokenStatus, TokenStatus.ACTIVE> = TokenStatus.REVOKED
-  ): Promise<void> {
+  ): Promise<boolean> {
     const session = await this.sessions.findOne({
       where: {
         createdAt: {
-          [Op.gte]: dayjs.unix(<number>familyToken.iat).utc().toDate()
+          [Op.gte]: dayjs
+            .unix(familyToken.iat as number)
+            .utc()
+            .toDate()
         },
         familyId: familyToken.ref,
         status: TokenStatus.ACTIVE,
@@ -347,25 +377,29 @@ export class AuthService {
     });
 
     if (!session) {
-      throw new UnauthorizedException('No active session found.');
+      return false;
     }
 
     const decoded = this.jwtService.decode<JwtPayload>(session.token);
-    if (TokenType.ACCESS !== decoded.type) {
-      throw new UnauthorizedException('No access token found.');
-    }
-
     await session.update({ status });
     await this.redis.setKey(
       session.token,
       session.userId.toString(),
-      dayjs.unix(<number>decoded.exp).utc().diff(dayjs().utc(), 'seconds')
+      dayjs
+        .unix(decoded.exp as number)
+        .utc()
+        .diff(dayjs().utc(), 'second')
     );
+
+    return true;
   }
 
   async getSessionTokens(userId: number): Promise<JwtTokens> {
     const tokenRef = crypto.randomBytes(32).toString('hex');
-    const accessToken = this.createAccessToken({ ref: tokenRef, sub: userId.toString() });
+    const accessToken = this.createAccessToken({
+      ref: tokenRef,
+      sub: userId.toString()
+    });
     const refreshToken = this.createRefreshToken({
       ref: tokenRef,
       sub: userId.toString()
