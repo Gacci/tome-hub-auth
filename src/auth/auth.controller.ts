@@ -15,6 +15,7 @@ import {
   Post,
   Request,
   UploadedFile,
+  UseGuards,
   UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -23,6 +24,7 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
 import { SuccessResponse } from '../common/decorators/success-response.decorator';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { CheckUserAccessGuard } from '../guards/user-access/check-user-access.guard';
 // import { userProfileStorage } from '../common/storage/user-profile-storage';
 import { AuthService } from './auth.service';
 import { Public } from './decorators/public.decorator';
@@ -113,6 +115,8 @@ export class AuthController {
 
   @Patch('account/:id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(CheckUserAccessGuard)
+  // @CheckUserAccess({ withLocalKey: 'subs', withRequestKey: 'id' })
   @ApiResponse({
     description: 'Updates user specified by `id`',
     status: HttpStatus.OK
@@ -127,6 +131,7 @@ export class AuthController {
 
   @Delete('account/:id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(CheckUserAccessGuard)
   @ApiResponse({
     description: 'Deletes user specified by `id`',
     status: HttpStatus.OK
