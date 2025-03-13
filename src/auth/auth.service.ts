@@ -31,6 +31,7 @@ import {
 
 // export type JwtPayload = { exp?: number; sub: number; ref: string; type?: TokenType; };
 export type JwtTokens = { accessToken: string; refreshToken: string };
+export type JwtStatus = { blacklisted: boolean; type: TokenType; };
 
 @Injectable()
 export class AuthService {
@@ -288,11 +289,11 @@ export class AuthService {
 
   async verifyTokenStatus(
     jwtRawToken: string
-  ): Promise<{ [key: string]: any }> {
+  ): Promise<JwtStatus> {
     const decoded = this.jwtService.decode<JwtPayload>(jwtRawToken);
     return {
       blacklisted: !!(await this.redis.getKey(jwtRawToken)),
-      type: decoded.type
+      type: decoded.type as TokenType
     };
   }
 
