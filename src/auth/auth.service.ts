@@ -16,6 +16,7 @@ import { Op } from 'sequelize';
 
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { MailerService } from '../mailer/mailer.service';
+import { RabbitMQService, RoutingKey } from '../rabbit-mq/rabbit-mq.service';
 import { RedisService } from '../redis/redis.service';
 import { User } from '../user/user.entity';
 import { CredentialsDto } from './dto/credentials.dto';
@@ -31,7 +32,9 @@ import {
 
 // export type JwtPayload = { exp?: number; sub: number; ref: string; type?: TokenType; };
 export type JwtTokens = { accessToken: string; refreshToken: string };
-export type JwtStatus = { blacklisted: boolean; type: TokenType; };
+export type JwtStatus = { blacklisted: boolean; type: TokenType };
+
+// const Pluck = <T, K extends keyof T>(obj: T, key: K) => obj[key];
 
 @Injectable()
 export class AuthService {
@@ -39,6 +42,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly mailer: MailerService,
+    private readonly rabbitMQService: RabbitMQService,
     private readonly redis: RedisService,
     @InjectModel(SessionToken) private readonly sessions: typeof SessionToken,
     @InjectModel(User) private readonly users: typeof User
@@ -73,14 +77,25 @@ export class AuthService {
   }
 
   async register(email: string, password: string): Promise<void> {
-    const user = await this.findByEmail(email);
-    if (user) {
+    const existing = await this.findByEmail(email);
+    if (existing) {
       throw new ConflictException('User already exists.');
     }
 
     const verifyAccountOtp = this.generateOtp(6);
+    const inserted = await this.users.create({
+      email,
+      password,
+      verifyAccountOtp
+    });
+
     await this.mailer.notifySuccessfulRegistration(email, verifyAccountOtp);
-    await this.users.create({ email, password, verifyAccountOtp });
+    this.rabbitMQService.publish(RoutingKey.USER_REGISTRATION, {
+      userId: inserted.userId,
+      createdAt: inserted.createdAt,
+      email: inserted.email,
+      updatedAt: inserted.updatedAt
+    });
   }
 
   async sendRegisterOtp(email: string): Promise<void> {
@@ -119,6 +134,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid OTP');
     }
 
+    this.rabbitMQService.publish(RoutingKey.USER_UPDATE, {
+      isAccountVerified: user.isAccountVerified
+    });
     await user.update({
       isAccountVerified: true,
       verifyAccountOtp: null
@@ -200,12 +218,25 @@ export class AuthService {
   }
 
   async update(userId: number, update: UpdateAuthDto) {
-    const user = await this.users.findByPk(userId);
-    if (!user) {
+    const existing = await this.users.findByPk(userId);
+    if (!existing) {
       throw new NotFoundException('User not found.');
     }
 
-    return await user.update(update);
+    const user = await existing.update(update);
+    this.rabbitMQService.publish<UpdateAuthDto>(RoutingKey.USER_UPDATE, {
+      userId: user.userId,
+      ...(user.cellPhoneNumber
+        ? { cellPhoneNumber: user.cellPhoneNumber }
+        : {}),
+      ...(user.cellPhoneCarrier
+        ? { cellPhoneCarrier: user.cellPhoneCarrier }
+        : {}),
+      ...(user.firstName ? { firstName: user.firstName } : {}),
+      ...(user.lastName ? { lastName: user.lastName } : {})
+    } as Partial<User>);
+
+    return update;
   }
 
   async remove(userId: number) {
@@ -214,7 +245,12 @@ export class AuthService {
       throw new NotFoundException('User not found.');
     }
 
-    return this.users.destroy({ where: { userId } });
+    if (!(await this.users.destroy({ where: { userId } }))) {
+      return 0;
+    }
+
+    this.rabbitMQService.publish(RoutingKey.USER_UPDATE, { userId });
+    return 1;
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -279,17 +315,15 @@ export class AuthService {
       throw new BadRequestException('Password reuse not allowed.');
     }
 
-    await this.mailer.notifyPasswordChanged(user.email);
     await user.update({ password });
+    await this.mailer.notifyPasswordChanged(user.email);
   }
 
   async isTokenBlacklisted(jwtRawToken: string): Promise<string | null> {
     return await this.redis.getKey(jwtRawToken);
   }
 
-  async verifyTokenStatus(
-    jwtRawToken: string
-  ): Promise<JwtStatus> {
+  async verifyTokenStatus(jwtRawToken: string): Promise<JwtStatus> {
     const decoded = this.jwtService.decode<JwtPayload>(jwtRawToken);
     if (!(await this.users.exists({ userId: +decoded.sub }))) {
       throw new BadRequestException('User no longer exists.');
@@ -322,8 +356,22 @@ export class AuthService {
       }
     });
 
+    // await this.redis.setKey(
+    //   refres,
+    //   session.userId.toString(),
+    //   dayjs
+    //     .unix(decoded.exp as number)
+    //     .utc()
+    //     .diff(dayjs().utc(), 'second')
+    // );
+
     for (const session of sessions) {
       const decoded = this.jwtService.decode<JwtPayload>(session.token);
+      this.rabbitMQService.publish(
+        RoutingKey.TOKEN_REFRESH_REVOKE,
+        session.token
+      );
+
       await session.update({ status: TokenStatus.REVOKED });
       await this.redis.setKey(
         session.token,
@@ -389,6 +437,8 @@ export class AuthService {
     }
 
     const decoded = this.jwtService.decode<JwtPayload>(session.token);
+    this.rabbitMQService.publish(RoutingKey.TOKEN_ACCESS_REVOKE, session.token);
+
     await session.update({ status });
     await this.redis.setKey(
       session.token,
