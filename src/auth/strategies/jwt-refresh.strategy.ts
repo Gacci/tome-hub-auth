@@ -6,12 +6,7 @@ import { Request } from 'express';
 import { Strategy } from 'passport-jwt';
 
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
-
-export const ExtractRefreshJwtFromCookies = (req: Request): string | null => {
-  return req.cookies.refresh_token
-    ? (req.cookies.refresh_token as string)
-    : null;
-};
+import { JWT_REFRESH_TOKEN_NAME } from '../../config/constants';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -21,13 +16,15 @@ export class JwtRefreshStrategy extends PassportStrategy(
   constructor(private readonly configService: ConfigService) {
     super({
       ignoreExpiration: false,
-      jwtFromRequest: ExtractRefreshJwtFromCookies,
+      jwtFromRequest: (req: Request): string | null =>
+        req.cookies[JWT_REFRESH_TOKEN_NAME]
+          ? (req.cookies[JWT_REFRESH_TOKEN_NAME] as string)
+          : null,
       secretOrKey: configService.getOrThrow('JWT_TOKEN_SECRET')
     });
   }
 
   validate(payload: JwtPayload): JwtPayload {
-    console.log('JwtRefreshStrategy');
     return payload;
   }
 }

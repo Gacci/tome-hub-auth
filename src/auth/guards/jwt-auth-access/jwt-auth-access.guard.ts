@@ -9,6 +9,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 
 import { JwtPayload } from '../../../common/interfaces/jwt-payload.interface';
+import { JWT_ACCESS_TOKEN_NAME } from '../../../config/constants';
 import { RedisService } from '../../../redis/redis.service';
 import { TokenType } from '../../entities/session-token.entity';
 
@@ -37,7 +38,9 @@ export class JwtAuthAccessGuard
       );
     }
 
-    if (await this.redis.getKey(request.cookies.access_token as string)) {
+    if (
+      await this.redis.getKey(request.cookies[JWT_ACCESS_TOKEN_NAME] as string)
+    ) {
       throw new UnauthorizedException('Revoked token.');
     }
 

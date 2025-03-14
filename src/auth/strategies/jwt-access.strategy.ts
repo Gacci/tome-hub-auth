@@ -6,10 +6,7 @@ import { Request } from 'express';
 import { Strategy } from 'passport-jwt';
 
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
-
-export const ExtractAccessJwtFromCookies = (req: Request): string | null => {
-  return req.cookies.access_token ? (req.cookies.access_token as string) : null;
-};
+import { JWT_ACCESS_TOKEN_NAME } from '../../config/constants';
 
 @Injectable()
 export class JwtAccessStrategy extends PassportStrategy(
@@ -19,13 +16,15 @@ export class JwtAccessStrategy extends PassportStrategy(
   constructor(private readonly configService: ConfigService) {
     super({
       ignoreExpiration: false,
-      jwtFromRequest: ExtractAccessJwtFromCookies,
+      jwtFromRequest: (req: Request): string | null =>
+        req.cookies[JWT_ACCESS_TOKEN_NAME]
+          ? (req.cookies[JWT_ACCESS_TOKEN_NAME] as string)
+          : null,
       secretOrKey: configService.getOrThrow('JWT_TOKEN_SECRET')
     });
   }
 
   validate(payload: JwtPayload): JwtPayload {
-    console.log('JwtAccessStrategy');
     return payload;
   }
 }
