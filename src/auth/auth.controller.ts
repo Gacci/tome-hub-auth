@@ -4,7 +4,6 @@ import {
   Delete,
   FileTypeValidator,
   Get,
-  Headers,
   HttpCode,
   HttpStatus,
   MaxFileSizeValidator,
@@ -13,7 +12,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Request,
+  Req,
   Res,
   UploadedFile,
   UseGuards,
@@ -175,7 +174,7 @@ export class AuthController {
   @SuccessResponse('Successfully uploaded profile image.')
   @UseInterceptors(FileInterceptor('file')) // { storage: userProfileStorage }
   async setProfilePicture(
-    @Request() req: { user: JwtPayload },
+    @Req() req: { user: JwtPayload },
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -230,7 +229,7 @@ export class AuthController {
   })
   @SuccessResponse('You password has been successfully changed.')
   async updatePassword(
-    @Request() req: { user: JwtPayload },
+    @Req() req: { user: JwtPayload },
     @Body() body: { newPassword: string }
   ) {
     await this.auth.updatePassword(+req.user.sub, body.newPassword);
@@ -244,8 +243,21 @@ export class AuthController {
     status: HttpStatus.OK
   })
   @SuccessResponse('Access token has been successfully refreshed.')
-  async refreshAccessToken(@Request() req: { user: JwtPayload }) {
-    return await this.auth.exchangeAccessToken(req.user);
+  async refreshAccessToken(
+    @Req() req: { user: JwtPayload },
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const jwtAccessToken = await this.auth.exchangeAccessToken(req.user);
+    const isProdEnv = ['prod', 'production'].includes(
+      this.configService.get<string>('NODE_ENV', '')
+    );
+
+    res.cookie('access_token', jwtAccessToken, {
+      httpOnly: isProdEnv,
+      maxAge: 1000 * +this.configService.get('JWT_ACCESS_TOKEN_EXPIRES'),
+      sameSite: 'none',
+      secure: isProdEnv
+    });
   }
 
   @Delete('token/refresh/revoke')
@@ -253,7 +265,7 @@ export class AuthController {
   @UseGuards(JwtAuthRefreshGuard)
   @ApiResponse({ description: 'Revokes refresh token.', status: HttpStatus.OK })
   @SuccessResponse('Refresh token has been successfully revoked.')
-  async revokeRefreshTokens(@Request() req: { user: JwtPayload }) {
+  async revokeRefreshTokens(@Req() req: { user: JwtPayload }) {
     await this.auth.revokeRefreshToken(req.user);
   }
 }

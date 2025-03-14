@@ -17,7 +17,7 @@ export class JwtAccessStrategy extends PassportStrategy(
     super({
       ignoreExpiration: false,
       jwtFromRequest: (req: Request): string | null =>
-        req.cookies[JWT_ACCESS_TOKEN_NAME]
+        Object.hasOwn(req.cookies, JWT_ACCESS_TOKEN_NAME)
           ? (req.cookies[JWT_ACCESS_TOKEN_NAME] as string)
           : null,
       secretOrKey: configService.getOrThrow('JWT_TOKEN_SECRET')

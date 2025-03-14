@@ -23,7 +23,11 @@ import {
 @Scopes(() => ({
   fullDataView: { attributes: { include: ['password'] } }
 }))
-@Table({ paranoid: true, tableName: 'Users', timestamps: true })
+@Table({
+  paranoid: true,
+  tableName: 'Users',
+  timestamps: true
+})
 export class User extends Model<
   InferAttributes<User>,
   InferCreationAttributes<User>
@@ -77,7 +81,7 @@ export class User extends Model<
   declare resetPasswordOtpIssuedAt?: Date | null;
 
   @Column({ type: DataType.DATE })
-  declare deletedAt: Date | null; // Soft delete column
+  declare deletedAt: Date | null;
 
   @BeforeCreate
   @BeforeUpdate

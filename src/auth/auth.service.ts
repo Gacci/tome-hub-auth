@@ -21,6 +21,7 @@ import { RedisService } from '../redis/redis.service';
 import { User } from '../user/user.entity';
 import { CredentialsDto } from './dto/credentials.dto';
 import { LoginAuthDto } from './dto/login.dto';
+import { ProfileDto } from './dto/profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
@@ -125,10 +126,10 @@ export class AuthService {
 
     await this.mailer.notifySuccessfulRegistration(email, verifyAccountOtp);
     this.rabbitMQService.publish(RoutingKey.USER_REGISTRATION, {
-      userId: inserted.userId,
       createdAt: inserted.createdAt,
       email: inserted.email,
-      updatedAt: inserted.updatedAt
+      updatedAt: inserted.updatedAt,
+      userId: inserted.userId
     });
   }
 
@@ -260,19 +261,17 @@ export class AuthService {
     }
 
     const user = await existing.update(update);
-    this.rabbitMQService.publish<UpdateAuthDto>(RoutingKey.USER_UPDATE, {
-      userId: user.userId,
-      ...(user.cellPhoneNumber
-        ? { cellPhoneNumber: user.cellPhoneNumber }
-        : {}),
-      ...(user.cellPhoneCarrier
-        ? { cellPhoneCarrier: user.cellPhoneCarrier }
-        : {}),
-      ...(user.firstName ? { firstName: user.firstName } : {}),
-      ...(user.lastName ? { lastName: user.lastName } : {})
-    } as Partial<User>);
+    this.rabbitMQService.publish(
+      RoutingKey.USER_UPDATE,
+      Object.fromEntries(
+        [...Object.keys(update), 'updatedAt'].map((k: keyof typeof update) => [
+          k,
+          user[k as keyof typeof user]
+        ])
+      )
+    );
 
-    return update;
+    return user;
   }
 
   async remove(userId: number) {
@@ -430,7 +429,7 @@ export class AuthService {
       userId: +decodedRefreshToken.sub
     });
 
-    return { jwtAccessToken };
+    return jwtAccessToken;
   }
 
   async deactivateAccessToken(
