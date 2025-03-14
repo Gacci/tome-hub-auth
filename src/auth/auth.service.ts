@@ -31,7 +31,7 @@ import {
 } from './entities/session-token.entity';
 
 // export type JwtPayload = { exp?: number; sub: number; ref: string; type?: TokenType; };
-export type JwtTokens = { accessToken: string; refreshToken: string };
+export type JwtTokens = { jwtAccessToken: string; jwtRefreshToken: string };
 export type JwtStatus = { blacklisted: boolean; type: TokenType };
 
 // const Pluck = <T, K extends keyof T>(obj: T, key: K) => obj[key];
@@ -58,11 +58,45 @@ export class AuthService {
     return dayjs().utc().isAfter(dayjs(date).utc().add(seconds, 'second'));
   }
 
+  async getSessionTokens(userId: number): Promise<JwtTokens> {
+    const tokenRef = crypto.randomBytes(32).toString('hex');
+    const jwtAccessToken = this.createAccessToken({
+      ref: tokenRef,
+      sub: userId.toString()
+    });
+    const jwtRefreshToken = this.createRefreshToken({
+      ref: tokenRef,
+      sub: userId.toString()
+    });
+
+    await this.sessions.bulkCreate([
+      {
+        familyId: tokenRef,
+        status: TokenStatus.ACTIVE,
+        token: jwtAccessToken,
+        type: TokenType.ACCESS,
+        userId: userId
+      },
+      {
+        familyId: tokenRef,
+        status: TokenStatus.ACTIVE,
+        token: jwtRefreshToken,
+        type: TokenType.REFRESH,
+        userId: userId
+      }
+    ]);
+
+    return {
+      jwtAccessToken,
+      jwtRefreshToken
+    };
+  }
+
   private createAccessToken(payload: JwtPayload): string {
     return this.jwtService.sign(
       { ...payload, type: TokenType.ACCESS },
       {
-        expiresIn: this.configService.get('JWT_ACCESS_TOKEN_EXPIRES')
+        expiresIn: +this.configService.get('JWT_ACCESS_TOKEN_EXPIRES')
       }
     );
   }
@@ -71,7 +105,7 @@ export class AuthService {
     return this.jwtService.sign(
       { ...payload, type: TokenType.REFRESH },
       {
-        expiresIn: this.configService.get('JWT_REFRESH_TOKEN_EXPIRES')
+        expiresIn: +this.configService.get('JWT_REFRESH_TOKEN_EXPIRES')
       }
     );
   }
@@ -134,12 +168,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid OTP');
     }
 
-    this.rabbitMQService.publish(RoutingKey.USER_UPDATE, {
-      isAccountVerified: user.isAccountVerified
-    });
-    await user.update({
+    const updated = await user.update({
       isAccountVerified: true,
       verifyAccountOtp: null
+    });
+
+    this.rabbitMQService.publish(RoutingKey.USER_UPDATE, {
+      isAccountVerified: updated.isAccountVerified,
+      userId: updated.userId
     });
   }
 
@@ -319,22 +355,6 @@ export class AuthService {
     await this.mailer.notifyPasswordChanged(user.email);
   }
 
-  async isTokenBlacklisted(jwtRawToken: string): Promise<string | null> {
-    return await this.redis.getKey(jwtRawToken);
-  }
-
-  async verifyTokenStatus(jwtRawToken: string): Promise<JwtStatus> {
-    const decoded = this.jwtService.decode<JwtPayload>(jwtRawToken);
-    if (!(await this.users.exists({ userId: +decoded.sub }))) {
-      throw new BadRequestException('User no longer exists.');
-    }
-
-    return {
-      blacklisted: !!(await this.redis.getKey(jwtRawToken)),
-      type: decoded.type as TokenType
-    };
-  }
-
   async revokeRefreshToken(decodedRefreshToken: JwtPayload): Promise<void> {
     if (TokenType.REFRESH !== decodedRefreshToken.type) {
       throw new UnauthorizedException(
@@ -398,19 +418,19 @@ export class AuthService {
       TokenStatus.EXCHANGED
     );
 
-    const accessToken = this.createAccessToken({
+    const jwtAccessToken = this.createAccessToken({
       ref: decodedRefreshToken.ref,
       sub: decodedRefreshToken.sub
     });
     await this.sessions.create({
       familyId: decodedRefreshToken.ref,
       status: TokenStatus.ACTIVE,
-      token: accessToken,
+      token: jwtAccessToken,
       type: TokenType.ACCESS,
       userId: +decodedRefreshToken.sub
     });
 
-    return { accessToken };
+    return { jwtAccessToken };
   }
 
   async deactivateAccessToken(
@@ -450,39 +470,5 @@ export class AuthService {
     );
 
     return true;
-  }
-
-  async getSessionTokens(userId: number): Promise<JwtTokens> {
-    const tokenRef = crypto.randomBytes(32).toString('hex');
-    const accessToken = this.createAccessToken({
-      ref: tokenRef,
-      sub: userId.toString()
-    });
-    const refreshToken = this.createRefreshToken({
-      ref: tokenRef,
-      sub: userId.toString()
-    });
-
-    await this.sessions.bulkCreate([
-      {
-        familyId: tokenRef,
-        status: TokenStatus.ACTIVE,
-        token: accessToken,
-        type: TokenType.ACCESS,
-        userId: userId
-      },
-      {
-        familyId: tokenRef,
-        status: TokenStatus.ACTIVE,
-        token: refreshToken,
-        type: TokenType.REFRESH,
-        userId: userId
-      }
-    ]);
-
-    return {
-      accessToken,
-      refreshToken
-    };
   }
 }

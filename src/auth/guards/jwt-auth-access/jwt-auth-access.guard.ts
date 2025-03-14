@@ -1,0 +1,54 @@
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException
+} from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
+import { Request } from 'express';
+
+import { JwtPayload } from '../../../common/interfaces/jwt-payload.interface';
+import { RedisService } from '../../../redis/redis.service';
+import { TokenType } from '../../entities/session-token.entity';
+
+@Injectable()
+export class JwtAuthAccessGuard
+  extends AuthGuard('jwt-access')
+  implements CanActivate
+{
+  constructor(private readonly redis: RedisService) {
+    super();
+  }
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    // First, ensure the JWT is valid. If authentication failed, result will be false
+    if (!(await super.canActivate(context))) {
+      return false;
+    }
+
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user: JwtPayload }>();
+
+    if (request.user.type !== TokenType.ACCESS) {
+      throw new UnauthorizedException(
+        `Unexpected token type: ${request.user.type}`
+      );
+    }
+
+    if (await this.redis.getKey(request.cookies.access_token as string)) {
+      throw new UnauthorizedException('Revoked token.');
+    }
+
+    return true;
+  }
+
+  // // Optionally override handleRequest to customize error handling
+  // handleRequest(err, user, info) {
+  //   if (err || !user) {
+  //     throw err || new UnauthorizedException('Authentication failed');
+  //   }
+  //   return user;
+  // }
+}

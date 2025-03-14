@@ -11,15 +11,14 @@ import * as path from 'node:path';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
-import { JwtAuthGuard } from './auth/guards/jwt-auth/jwt-auth.guard';
-import { BlacklistGuard } from './auth/guards/jwt-token-blacklist/jwt-token-blacklist.guard';
-import { JwtStrategy } from './auth/strategies/jwt.strategy';
+import { JwtAccessStrategy } from './auth/strategies/jwt-access.strategy';
+import { JwtRefreshStrategy } from './auth/strategies/jwt-refresh.strategy';
 import { AwsModule } from './aws/aws.module';
-// import { RabbitMQModule } from './rabbit-mq/rabbit-mq.module';
 import { RedisModule } from './redis/redis.module';
 import { UserModule } from './user/user.module';
 
 @Module({
+  // exports: ['JwtAccessStrategy', 'JwtRefreshStrategy'],
   imports: [
     AuthModule,
     ConfigModule.forRoot({
@@ -79,18 +78,17 @@ import { UserModule } from './user/user.module';
     AwsModule
   ],
   providers: [
-    JwtStrategy,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard
     },
     {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard
+      provide: 'JwtAccessStrategy',
+      useClass: JwtAccessStrategy
     },
     {
-      provide: APP_GUARD,
-      useClass: BlacklistGuard
+      provide: 'JwtRefreshStrategy',
+      useClass: JwtRefreshStrategy
     }
   ]
 })

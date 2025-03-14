@@ -13,11 +13,10 @@ import { User } from '../user/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { SessionToken } from './entities/session-token.entity';
-import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   controllers: [AuthController],
-  exports: [AuthService, JwtStrategy, JwtModule, PassportModule, RedisService],
+  exports: [AuthService, JwtModule, PassportModule, RedisService],
   imports: [
     ConfigModule.forRoot(),
     JwtModule.registerAsync({
@@ -29,16 +28,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       })
     }),
     MailerModule,
-    PassportModule.register({ defaultStrategy: 'jwt' }),
+    PassportModule.register({}),
     RabbitMQModule,
     SequelizeModule.forFeature([SessionToken, User])
   ],
-  providers: [
-    AwsConfigService,
-    AuthService,
-    JwtStrategy,
-    RedisService,
-    CheckUserAccessGuard
-  ]
+  providers: [AwsConfigService, AuthService, RedisService, CheckUserAccessGuard]
 })
 export class AuthModule {}

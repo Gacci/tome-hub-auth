@@ -3,7 +3,8 @@ import dayjs from 'dayjs';
 import {
   CreationOptional,
   InferAttributes,
-  InferCreationAttributes
+  InferCreationAttributes,
+  Sequelize
 } from 'sequelize';
 import {
   BeforeCreate,
@@ -110,6 +111,10 @@ export class User extends Model<
   }
 
   static async exists(where: Partial<InferAttributes<User>>) {
-    return await User.findOne({ attributes: ['1'], raw: true, where });
+    return await User.findOne({
+      attributes: [[Sequelize.literal('1'), 'existing']],
+      raw: true,
+      where
+    });
   }
 }
