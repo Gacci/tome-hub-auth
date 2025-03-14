@@ -325,6 +325,10 @@ export class AuthService {
 
   async verifyTokenStatus(jwtRawToken: string): Promise<JwtStatus> {
     const decoded = this.jwtService.decode<JwtPayload>(jwtRawToken);
+    if (!(await this.users.exists({ userId: +decoded.sub }))) {
+      throw new BadRequestException('User no longer exists.');
+    }
+
     return {
       blacklisted: !!(await this.redis.getKey(jwtRawToken)),
       type: decoded.type as TokenType
@@ -383,6 +387,10 @@ export class AuthService {
   async exchangeAccessToken(decodedRefreshToken: JwtPayload) {
     if (TokenType.REFRESH !== decodedRefreshToken.type) {
       throw new UnauthorizedException('Refresh token required.');
+    }
+
+    if (!(await this.users.exists({ userId: +decodedRefreshToken.sub }))) {
+      throw new BadRequestException('User no longer exists.');
     }
 
     await this.deactivateAccessToken(
