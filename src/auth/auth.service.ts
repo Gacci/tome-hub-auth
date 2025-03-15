@@ -280,12 +280,13 @@ export class AuthService {
       throw new NotFoundException('User not found.');
     }
 
-    if (!(await this.users.destroy({ where: { userId } }))) {
-      return 0;
-    }
+    const { deletedAt } = await user.update({ deletedAt: dayjs().utc() });
+    this.rabbitMQService.publish(RoutingKey.USER_UPDATE, {
+      deletedAt,
+      userId
+    });
 
-    this.rabbitMQService.publish(RoutingKey.USER_UPDATE, { userId });
-    return 1;
+    return !!deletedAt;
   }
 
   async findByEmail(email: string): Promise<User | null> {
