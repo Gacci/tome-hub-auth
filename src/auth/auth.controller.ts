@@ -4,7 +4,6 @@ import {
   Delete,
   FileTypeValidator,
   Get,
-  Headers,
   HttpCode,
   HttpStatus,
   MaxFileSizeValidator,
@@ -13,13 +12,17 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Request,
+  Req,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
+
+import { CookieOptions, Response } from 'express';
 
 import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
 import { SuccessResponse } from '../common/decorators/success-response.decorator';
@@ -27,7 +30,6 @@ import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { CheckUserAccessGuard } from '../guards/user-access/check-user-access.guard';
 // import { userProfileStorage } from '../common/storage/user-profile-storage';
 import { AuthService } from './auth.service';
-import { Public } from './decorators/public.decorator';
 import { CredentialsDto } from './dto/credentials.dto';
 import { EmailDto } from './dto/email.dto';
 import { LoginAuthDto } from './dto/login.dto';
@@ -37,16 +39,18 @@ import { RegisterAuthDto } from './dto/register-auth.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
+import { JwtAuthAccessGuard } from './guards/jwt-auth-access/jwt-auth-access.guard';
+import { JwtAuthRefreshGuard } from './guards/jwt-auth-refresh/jwt-auth-refresh.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
-    private readonly awsConfigService: AwsConfigService
+    private readonly awsConfigService: AwsConfigService,
+    private readonly configService: ConfigService
   ) {}
 
-  @Public()
   @Post('account/register')
   @ApiResponse({
     description: 'Registers a new user',
@@ -57,7 +61,6 @@ export class AuthController {
     await this.auth.register(createAuthDto.email, createAuthDto.password);
   }
 
-  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('account/register/otp/resend')
   @ApiResponse({
@@ -71,7 +74,6 @@ export class AuthController {
     await this.auth.sendRegisterOtp(body.email);
   }
 
-  @Public()
   @HttpCode(HttpStatus.OK)
   @Post('account/verify')
   @ApiResponse({
@@ -83,19 +85,39 @@ export class AuthController {
     await this.auth.verifyAccount(body);
   }
 
-  @Public()
   @Post('account/login')
+  @HttpCode(HttpStatus.OK)
   @ApiResponse({
     description:
       'Grants access to user (requires OTP if user is enrolled in 2FA authentication).',
     status: HttpStatus.OK
   })
   @SuccessResponse('Login successful.')
-  async login(@Body() loginAuthDto: LoginAuthDto) {
-    return await this.auth.login(loginAuthDto);
+  async login(
+    @Res({ passthrough: true }) res: Response,
+    @Body() loginAuthDto: LoginAuthDto
+  ) {
+    const tokens = await this.auth.login(loginAuthDto);
+    const isProdEnv = ['prod', 'production'].includes(
+      this.configService.get<string>('NODE_ENV', '')
+    );
+
+    const options: CookieOptions = {
+      httpOnly: isProdEnv,
+      sameSite: 'none',
+      secure: isProdEnv
+    };
+
+    res.cookie('access_token', tokens?.jwtAccessToken, {
+      ...options,
+      maxAge: 1000 * +this.configService.get('JWT_ACCESS_TOKEN_EXPIRES')
+    });
+    res.cookie('refresh_token', tokens?.jwtRefreshToken, {
+      ...options,
+      maxAge: 1000 * +this.configService.get('JWT_REFRESH_TOKEN_EXPIRES')
+    });
   }
 
-  @Public()
   @Post('account/login/otp/resend')
   @ApiResponse({ description: 'Sends login OTP.', status: HttpStatus.OK })
   @SuccessResponse('Check your inbox for your OTP.')
@@ -104,6 +126,7 @@ export class AuthController {
   }
 
   @Get('account/:id')
+  @UseGuards(JwtAuthAccessGuard)
   @ApiResponse({
     description: 'Reads user profile specified by `id`',
     status: HttpStatus.OK
@@ -115,7 +138,7 @@ export class AuthController {
 
   @Patch('account/:id')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(CheckUserAccessGuard)
+  @UseGuards(JwtAuthAccessGuard, CheckUserAccessGuard)
   // @CheckUserAccess({ withLocalKey: 'subs', withRequestKey: 'id' })
   @ApiResponse({
     description: 'Updates user specified by `id`',
@@ -131,7 +154,7 @@ export class AuthController {
 
   @Delete('account/:id')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(CheckUserAccessGuard)
+  @UseGuards(JwtAuthAccessGuard, CheckUserAccessGuard)
   @ApiResponse({
     description: 'Deletes user specified by `id`',
     status: HttpStatus.OK
@@ -143,6 +166,7 @@ export class AuthController {
 
   @Post('account/image')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthAccessGuard)
   @ApiResponse({
     description: 'Updates profile image for authenticated user.',
     status: HttpStatus.OK
@@ -150,7 +174,7 @@ export class AuthController {
   @SuccessResponse('Successfully uploaded profile image.')
   @UseInterceptors(FileInterceptor('file')) // { storage: userProfileStorage }
   async setProfilePicture(
-    @Request() req: { user: JwtPayload },
+    @Req() req: { user: JwtPayload },
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -174,7 +198,6 @@ export class AuthController {
     );
   }
 
-  @Public()
   @Post('password/reset/otp/send')
   @ApiResponse({
     description: 'Sends password reset OTP.',
@@ -185,9 +208,9 @@ export class AuthController {
     await this.auth.sendPasswordResetOtp(body.email);
   }
 
-  @Public()
   @Post('password/reset')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthAccessGuard)
   @ApiResponse({
     description: 'Resets password for user providing OTP.',
     status: HttpStatus.OK
@@ -199,13 +222,14 @@ export class AuthController {
 
   @Post('password/:id')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthAccessGuard, CheckUserAccessGuard)
   @ApiResponse({
     description: 'Resets password for user specified by `id`.',
     status: HttpStatus.OK
   })
   @SuccessResponse('You password has been successfully changed.')
   async updatePassword(
-    @Request() req: { user: JwtPayload },
+    @Req() req: { user: JwtPayload },
     @Body() body: { newPassword: string }
   ) {
     await this.auth.updatePassword(+req.user.sub, body.newPassword);
@@ -213,33 +237,35 @@ export class AuthController {
 
   @Post('token/access/refresh')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthRefreshGuard)
   @ApiResponse({
     description: 'Refreshes access token.',
     status: HttpStatus.OK
   })
   @SuccessResponse('Access token has been successfully refreshed.')
-  async refreshAccessToken(@Request() req: { user: JwtPayload }) {
-    return await this.auth.exchangeAccessToken(req.user);
+  async refreshAccessToken(
+    @Req() req: { user: JwtPayload },
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const jwtAccessToken = await this.auth.exchangeAccessToken(req.user);
+    const isProdEnv = ['prod', 'production'].includes(
+      this.configService.get<string>('NODE_ENV', '')
+    );
+
+    res.cookie('access_token', jwtAccessToken, {
+      httpOnly: isProdEnv,
+      maxAge: 1000 * +this.configService.get('JWT_ACCESS_TOKEN_EXPIRES'),
+      sameSite: 'none',
+      secure: isProdEnv
+    });
   }
 
   @Delete('token/refresh/revoke')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthRefreshGuard)
   @ApiResponse({ description: 'Revokes refresh token.', status: HttpStatus.OK })
   @SuccessResponse('Refresh token has been successfully revoked.')
-  async revokeRefreshTokens(@Request() req: { user: JwtPayload }) {
+  async revokeRefreshTokens(@Req() req: { user: JwtPayload }) {
     await this.auth.revokeRefreshToken(req.user);
-  }
-
-  @Post('token/status')
-  @HttpCode(HttpStatus.OK)
-  @ApiResponse({
-    description: 'Verifies whether a token is an active token.',
-    status: HttpStatus.OK
-  })
-  @SuccessResponse('Token status successfully verified.')
-  async verifyTokenStatus(@Headers() headers: { authorization: string }) {
-    return await this.auth.verifyTokenStatus(
-      headers.authorization.replace(/^Bearer\s/, '')
-    );
   }
 }
