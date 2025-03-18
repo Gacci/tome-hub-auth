@@ -1,4 +1,8 @@
-import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Logger,
+  ValidationPipe
+} from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
@@ -16,6 +20,8 @@ async function bootstrap() {
   // dayjs.extend(timezone);
   dayjs.extend(duration);
   dayjs.extend(utc);
+
+  const logger = new Logger('main.ts');
 
   const app = await NestFactory.create(AppModule);
   const config = new DocumentBuilder()
@@ -36,6 +42,9 @@ async function bootstrap() {
     origin: ['http://127.0.0.1:3000', 'http://localhost:3000']
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = process.env.PORT ? +process.env.PORT : 3001;
+  await app.listen(port);
+
+  logger.log(`*********** Server listening on port ********** ${port}`);
 }
 void bootstrap().then(r => console.log(r));
