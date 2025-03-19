@@ -42,9 +42,14 @@ async function bootstrap() {
     origin: ['http://127.0.0.1:3000', 'http://localhost:3000']
   });
 
-  const port = process.env.PORT ? +process.env.PORT : 3001;
-  await app.listen(port);
-
-  logger.log(`*********** Server listening on port ********** ${port}`);
+  const port = process.env.PORT ? +process.env.PORT : 3000;
+  try {
+    await app.listen(port);
+    logger.log(
+      `************** Server listening on port ${port} **************`
+    );
+  } catch (error) {
+    logger.error(error);
+  }
 }
-void bootstrap().then(r => console.log(r));
+void bootstrap();

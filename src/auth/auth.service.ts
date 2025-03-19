@@ -264,10 +264,9 @@ export class AuthService {
     this.rabbitMQService.publish(
       RoutingKey.USER_UPDATE,
       Object.fromEntries(
-        [...Object.keys(update), 'updatedAt'].map((k: keyof typeof update) => [
-          k,
-          user[k as keyof typeof user]
-        ])
+        [...Object.keys(update), 'updatedAt', 'userId'].map(
+          (k: keyof typeof update) => [k, user[k as keyof typeof user]]
+        )
       )
     );
 
