@@ -8,17 +8,12 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 import cookieParser from 'cookie-parser';
 import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
-// import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors/success-response/success-response.interceptor';
 
 async function bootstrap() {
-  // Use the plugin
-  // dayjs.extend(timezone);
-  dayjs.extend(duration);
   dayjs.extend(utc);
 
   const logger = new Logger('main.ts');
