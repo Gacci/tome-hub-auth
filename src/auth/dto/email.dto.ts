@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsNotEmpty, Matches } from 'class-validator';
 
 export class EmailDto {
   @ApiProperty({
@@ -9,5 +9,8 @@ export class EmailDto {
   })
   @IsEmail()
   @IsNotEmpty()
+  @Matches(/\.edu$/, {
+    message: 'Email must be an academic email (.edu)'
+  })
   email: string;
 }

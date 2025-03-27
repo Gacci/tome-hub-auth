@@ -13,7 +13,8 @@ import { RedisService } from '../redis/redis.service';
 import { User } from '../user/user.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { SessionToken } from './entities/session-token.entity';
+import { College } from './models/college.model';
+import { SessionToken } from './models/session-token.model';
 
 @Module({
   controllers: [AuthController],
@@ -32,7 +33,7 @@ import { SessionToken } from './entities/session-token.entity';
     PassportModule.register({}),
     RabbitMQModule,
     RedisModule,
-    SequelizeModule.forFeature([SessionToken, User])
+    SequelizeModule.forFeature([College, SessionToken, User])
   ],
   providers: [AwsConfigService, AuthService, RedisService, CheckUserAccessGuard]
 })

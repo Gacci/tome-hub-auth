@@ -9,13 +9,18 @@ import {
 import {
   BeforeCreate,
   BeforeUpdate,
+  BelongsTo,
   Column,
   DataType,
   DefaultScope,
+  ForeignKey,
   Model,
+  PrimaryKey,
   Scopes,
   Table
 } from 'sequelize-typescript';
+
+import { College } from '../auth/models/college.model';
 
 @DefaultScope(() => ({
   attributes: { exclude: ['password'] }
@@ -30,9 +35,10 @@ import {
 })
 export class User extends Model<
   InferAttributes<User>,
-  InferCreationAttributes<User>
+  InferCreationAttributes<User, { omit: 'college' }>
 > {
-  @Column({ autoIncrement: true, primaryKey: true, type: DataType.BIGINT })
+  @PrimaryKey
+  @Column({ autoIncrement: true, type: DataType.BIGINT })
   declare userId: CreationOptional<number>;
 
   @Column({ allowNull: false, type: DataType.STRING(128), unique: true })
@@ -79,6 +85,14 @@ export class User extends Model<
 
   @Column({ allowNull: true, type: DataType.DATE })
   declare resetPasswordOtpIssuedAt?: Date | null;
+
+  @ForeignKey(() => College)
+  @Column({ allowNull: true, type: DataType.INTEGER })
+  declare collegeId?: number;
+
+  // Define the relationship to College (belongs to)
+  @BelongsTo(() => College)
+  declare college?: College;
 
   @Column({ type: DataType.DATE })
   declare deletedAt: Date | null;

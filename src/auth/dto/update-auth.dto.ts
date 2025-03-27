@@ -9,7 +9,7 @@ import {
 
 export class UpdateAuthDto {
   @ApiProperty({
-    description: "User's first name",
+    description: "User's first name.",
     example: 'John',
     nullable: true,
     required: false
@@ -20,7 +20,7 @@ export class UpdateAuthDto {
   firstName?: string | null;
 
   @ApiProperty({
-    description: "User's last name",
+    description: "User's last name.",
     example: 'Doe',
     nullable: true,
     required: false
@@ -31,7 +31,7 @@ export class UpdateAuthDto {
   lastName?: string | null;
 
   @ApiProperty({
-    description: "User's cell phone number in international format",
+    description: "User's cell phone number in international format.",
     example: '+15551234567',
     nullable: true,
     required: false
@@ -41,7 +41,7 @@ export class UpdateAuthDto {
   cellPhoneNumber?: string | null;
 
   @ApiProperty({
-    description: "User's cell phone carrier",
+    description: "User's cell phone carrier.",
     example: 'Verizon',
     nullable: true,
     required: false
@@ -50,7 +50,17 @@ export class UpdateAuthDto {
   @IsString()
   cellPhoneCarrier?: string | null;
 
+  @ApiProperty({
+    description: "User's profile picture URL."
+  })
   @IsOptional()
   @IsString()
   profilePictureUrl?: string | null;
+
+  @ApiProperty({
+    description: "User's college ID."
+  })
+  @IsOptional()
+  @IsString()
+  collegeId?: number;
 }

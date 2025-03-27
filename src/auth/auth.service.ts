@@ -25,11 +25,12 @@ import { ProfileDto } from './dto/profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
+import { College } from './models/college.model';
 import {
   SessionToken,
   TokenStatus,
   TokenType
-} from './entities/session-token.entity';
+} from './models/session-token.model';
 
 // export type JwtPayload = { exp?: number; sub: number; ref: string; type?: TokenType; };
 export type JwtTokens = { jwtAccessToken: string; jwtRefreshToken: string };
@@ -45,10 +46,10 @@ export class AuthService {
     private readonly mailer: MailerService,
     private readonly rabbitMQService: RabbitMQService,
     private readonly redis: RedisService,
+    @InjectModel(College) private readonly colleges: typeof College,
     @InjectModel(SessionToken) private readonly sessions: typeof SessionToken,
     @InjectModel(User) private readonly users: typeof User
   ) {}
-
   private generateOtp(size: number = 6) {
     return (parseInt(crypto.randomBytes(3).toString('hex'), 16) % 1_000_000)
       .toString()

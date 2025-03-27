@@ -19,6 +19,9 @@ export class ResetPasswordDto {
   })
   @IsEmail()
   @IsNotEmpty()
+  @Matches(/\.edu$/, {
+    message: 'Email must be an academic email (.edu)'
+  })
   email: string;
 
   @ApiProperty({

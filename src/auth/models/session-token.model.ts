@@ -8,6 +8,7 @@ import {
   DataType,
   ForeignKey,
   Model,
+  PrimaryKey,
   Table
 } from 'sequelize-typescript';
 
@@ -34,10 +35,10 @@ export class SessionToken extends Model<
   InferAttributes<SessionToken>,
   InferCreationAttributes<SessionToken>
 > {
+  @PrimaryKey
   @Column({
     allowNull: false,
     autoIncrement: true,
-    primaryKey: true,
     type: DataType.BIGINT
   })
   declare sessionTokenId: CreationOptional<number>;

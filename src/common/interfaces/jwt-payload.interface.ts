@@ -1,4 +1,4 @@
-import { TokenType } from 'src/auth/entities/session-token.entity';
+import { TokenType } from 'src/auth/models/session-token.model';
 
 export interface JwtPayload {
   exp?: number;
