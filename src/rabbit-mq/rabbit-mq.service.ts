@@ -51,7 +51,9 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
     this.channel.publish(
       this.exchange,
       routingKey,
-      Buffer.from(JSON.stringify(message))
+      Buffer.from(
+        typeof message === 'string' ? message : JSON.stringify(message)
+      )
     );
   }
 
