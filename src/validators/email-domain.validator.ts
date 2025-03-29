@@ -1,7 +1,7 @@
 // validators/email-domain.validator.ts
 import { ValidationOptions, registerDecorator } from 'class-validator';
 
-import { College } from '../auth/models/college.model';
+import { College } from '../colleges/models/college.model';
 
 export function IsDomainExists(validationOptions?: ValidationOptions) {
   return function (object: { [key: string]: any }, propertyName: string) {

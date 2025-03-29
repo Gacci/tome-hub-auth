@@ -10,7 +10,7 @@ export function Match(property: string, validationOptions?: ValidationOptions) {
       constraints: [property],
       name: 'Match',
       options: validationOptions,
-      propertyName,
+      propertyName: propertyName,
       target: object.constructor,
       validator: {
         defaultMessage(args: ValidationArguments) {
@@ -19,9 +19,10 @@ export function Match(property: string, validationOptions?: ValidationOptions) {
         validate(value: any, args: ValidationArguments) {
           console.log(value, args);
           const [relatedPropertyName] = args.constraints;
-          const relatedValue = (args.object as any)[relatedPropertyName];
+          const relatedValue = (args.object as any)[
+            relatedPropertyName as string
+          ];
           return value === relatedValue;
-          // return false;
         }
       }
     });

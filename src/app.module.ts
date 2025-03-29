@@ -14,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAccessStrategy } from './auth/strategies/jwt-access.strategy';
 import { JwtRefreshStrategy } from './auth/strategies/jwt-refresh.strategy';
 import { AwsModule } from './aws/aws.module';
+import { CollegesModule } from './colleges/colleges.module';
 import { RedisModule } from './redis/redis.module';
 import { UserModule } from './user/user.module';
 
@@ -75,7 +76,8 @@ import { UserModule } from './user/user.module';
       }
     ]),
     UserModule,
-    AwsModule
+    AwsModule,
+    CollegesModule
   ],
   providers: [
     {

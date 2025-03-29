@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 
-import { User } from '../../user/user.entity';
+import { User } from '../../user/user.model';
 
 export class ProfilePictureUrlDto {
   @Expose()

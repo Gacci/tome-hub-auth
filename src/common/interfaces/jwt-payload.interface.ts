@@ -4,6 +4,8 @@ export interface JwtPayload {
   exp?: number;
   iat?: number;
   ref: string;
-  sub: string;
+  scope?: number;
+  sub: number;
   type?: TokenType;
+  verified?: boolean;
 }

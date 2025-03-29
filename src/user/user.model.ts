@@ -20,7 +20,7 @@ import {
   Table
 } from 'sequelize-typescript';
 
-import { College } from '../auth/models/college.model';
+import { College } from '../colleges/models/college.model';
 
 @DefaultScope(() => ({
   attributes: { exclude: ['password'] }
@@ -40,6 +40,14 @@ export class User extends Model<
   @PrimaryKey
   @Column({ autoIncrement: true, type: DataType.BIGINT })
   declare userId: CreationOptional<number>;
+
+  @ForeignKey(() => College)
+  @Column({ allowNull: true, type: DataType.INTEGER })
+  declare collegeId?: number;
+
+  // Define the relationship to College (belongs to)
+  @BelongsTo(() => College)
+  declare college?: College;
 
   @Column({ allowNull: false, type: DataType.STRING(128), unique: true })
   declare email: string;
@@ -85,17 +93,6 @@ export class User extends Model<
 
   @Column({ allowNull: true, type: DataType.DATE })
   declare resetPasswordOtpIssuedAt?: Date | null;
-
-  @ForeignKey(() => College)
-  @Column({ allowNull: true, type: DataType.INTEGER })
-  declare collegeId?: number;
-
-  // Define the relationship to College (belongs to)
-  @BelongsTo(() => College)
-  declare college?: College;
-
-  @Column({ type: DataType.DATE })
-  declare deletedAt: Date | null;
 
   @BeforeCreate
   @BeforeUpdate

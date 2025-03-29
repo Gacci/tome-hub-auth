@@ -14,18 +14,17 @@ import * as crypto from 'crypto';
 import dayjs from 'dayjs';
 import { Op } from 'sequelize';
 
+import { CollegesService } from '../colleges/colleges.service';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { MailerService } from '../mailer/mailer.service';
 import { RabbitMQService, RoutingKey } from '../rabbit-mq/rabbit-mq.service';
 import { RedisService } from '../redis/redis.service';
-import { User } from '../user/user.entity';
+import { User } from '../user/user.model';
 import { CredentialsDto } from './dto/credentials.dto';
 import { LoginAuthDto } from './dto/login.dto';
-import { ProfileDto } from './dto/profile.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
-import { College } from './models/college.model';
 import {
   SessionToken,
   TokenStatus,
@@ -41,12 +40,12 @@ export type JwtStatus = { blacklisted: boolean; type: TokenType };
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly collegesService: CollegesService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
     private readonly mailer: MailerService,
     private readonly rabbitMQService: RabbitMQService,
     private readonly redis: RedisService,
-    @InjectModel(College) private readonly colleges: typeof College,
     @InjectModel(SessionToken) private readonly sessions: typeof SessionToken,
     @InjectModel(User) private readonly users: typeof User
   ) {}
@@ -60,15 +59,19 @@ export class AuthService {
     return dayjs().utc().isAfter(dayjs(date).utc().add(seconds, 'second'));
   }
 
-  async getSessionTokens(userId: number): Promise<JwtTokens> {
+  async getSessionTokens(user: User): Promise<JwtTokens> {
     const tokenRef = crypto.randomBytes(32).toString('hex');
     const jwtAccessToken = this.createAccessToken({
       ref: tokenRef,
-      sub: userId.toString()
+      scope: user.collegeId,
+      sub: user.userId,
+      verified: user.isAccountVerified
     });
     const jwtRefreshToken = this.createRefreshToken({
       ref: tokenRef,
-      sub: userId.toString()
+      scope: user.collegeId,
+      sub: user.userId,
+      verified: user.isAccountVerified
     });
 
     await this.sessions.bulkCreate([
@@ -77,14 +80,14 @@ export class AuthService {
         status: TokenStatus.ACTIVE,
         token: jwtAccessToken,
         type: TokenType.ACCESS,
-        userId: userId
+        userId: user.userId
       },
       {
         familyId: tokenRef,
         status: TokenStatus.ACTIVE,
         token: jwtRefreshToken,
         type: TokenType.REFRESH,
-        userId: userId
+        userId: user.userId
       }
     ]);
 
@@ -113,6 +116,12 @@ export class AuthService {
   }
 
   async register(email: string, password: string): Promise<void> {
+    if (!(await this.collegesService.emailDomainExists(email))) {
+      throw new BadRequestException(
+        'Email not valid, academic email required.'
+      );
+    }
+
     const existing = await this.findByEmail(email);
     if (existing) {
       throw new ConflictException('User already exists.');
@@ -126,10 +135,10 @@ export class AuthService {
     });
 
     await this.mailer.notifySuccessfulRegistration(email, verifyAccountOtp);
-    this.rabbitMQService.publish(RoutingKey.USER_REGISTRATION, {
-      createdAt: inserted.createdAt,
+    this.rabbitMQService.publish<Partial<User>>(RoutingKey.USER_REGISTRATION, {
+      createdAt: inserted.createdAt as Date,
       email: inserted.email,
-      updatedAt: inserted.updatedAt,
+      updatedAt: inserted.updatedAt as Date,
       userId: inserted.userId
     });
   }
@@ -150,6 +159,12 @@ export class AuthService {
   }
 
   async verifyAccount(payload: VerifyAccountDto) {
+    if (!(await this.collegesService.emailDomainExists(payload.email))) {
+      throw new BadRequestException(
+        'Email not valid, academic email required.'
+      );
+    }
+
     const user = await this.findByEmail(payload.email);
     if (!user) {
       throw new NotFoundException('User not found.');
@@ -182,6 +197,12 @@ export class AuthService {
   }
 
   async login(credentials: LoginAuthDto): Promise<JwtTokens | null> {
+    if (!(await this.collegesService.emailDomainExists(credentials.email))) {
+      throw new BadRequestException(
+        'Email not valid, academic email required.'
+      );
+    }
+
     const user = await this.users
       .scope('fullDataView')
       .findOne({ where: { email: credentials.email } });
@@ -228,7 +249,7 @@ export class AuthService {
     }
 
     await this.mailer.notifySuccessfulLogin(user.email);
-    return this.getSessionTokens(user.userId);
+    return this.getSessionTokens(user);
   }
 
   async sendLoginOtp(credentials: CredentialsDto): Promise<void> {
@@ -302,6 +323,12 @@ export class AuthService {
   }
 
   async sendPasswordResetOtp(email: string): Promise<void> {
+    if (!(await this.collegesService.emailDomainExists(email))) {
+      throw new BadRequestException(
+        'Email not valid, academic email required.'
+      );
+    }
+
     const user = await this.findByEmail(email);
     if (!user) {
       throw new NotFoundException('User not found.');
@@ -420,7 +447,9 @@ export class AuthService {
 
     const jwtAccessToken = this.createAccessToken({
       ref: decodedRefreshToken.ref,
-      sub: decodedRefreshToken.sub
+      scope: decodedRefreshToken.scope,
+      sub: decodedRefreshToken.sub,
+      verified: decodedRefreshToken.verified
     });
     await this.sessions.create({
       familyId: decodedRefreshToken.ref,

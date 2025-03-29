@@ -13,7 +13,7 @@ import {
   Table
 } from 'sequelize-typescript';
 
-import { User } from '../../user/user.entity';
+import { User } from '../../user/user.model';
 
 @Table({
   paranoid: true,
@@ -22,14 +22,34 @@ import { User } from '../../user/user.entity';
 })
 export class College extends Model<
   InferAttributes<College>,
-  InferCreationAttributes<College>
+  InferCreationAttributes<College, { omit: 'user' }>
 > {
   @PrimaryKey
   @Column({ allowNull: false, autoIncrement: true, type: DataType.INTEGER })
-  declare collegeId: CreationOptional<number>;
+  declare collegeId?: CreationOptional<number>;
 
-  @Column({ type: DataType.STRING(255) })
-  declare emailDomain: string;
+  @Column({ type: DataType.STRING(1024) })
+  declare locationName: string;
+
+  @Column({ allowNull: true, type: DataType.STRING(255) })
+  declare emailDomain?: string;
+
+  @Column({
+    allowNull: true,
+    defaultValue: () => Sequelize.literal('CURRENT_TIMESTAMP'),
+    type: DataType.DATE(3)
+  })
+  declare createdAt?: Date;
+
+  @Column({
+    allowNull: true,
+    defaultValue: () => Sequelize.literal('CURRENT_TIMESTAMP'),
+    type: DataType.DATE(3)
+  })
+  declare updatedAt?: Date;
+
+  @Column({ allowNull: true, type: DataType.DATE(3) })
+  declare deletedAt?: Date;
 
   // Define the reverse relationship (College has one User)
   @HasOne(() => User)
