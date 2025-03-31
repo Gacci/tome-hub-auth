@@ -121,47 +121,43 @@ export class AuthController {
   @Post('account/login/otp/resend')
   @ApiResponse({ description: 'Sends login OTP.', status: HttpStatus.OK })
   @SuccessResponse('Check your inbox for your OTP.')
-  async resendLoginOtp(@Body() loginAuthDto: CredentialsDto) {
-    return this.auth.sendLoginOtp(loginAuthDto);
+  async resendLoginOtp(@Body() body: CredentialsDto) {
+    return this.auth.sendLoginOtp(body);
   }
 
-  @Get('account/:id')
+  @Get('account')
   @UseGuards(JwtAuthAccessGuard)
   @ApiResponse({
-    description: 'Reads user profile specified by `id`',
+    description: "Reads authenticated user's profile.",
     status: HttpStatus.OK
   })
   @SuccessResponse('Success')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-    return new ProfileDto(await this.auth.findProfile(id));
+  async findOne(@Req() req: { user: JwtPayload }) {
+    return new ProfileDto(await this.auth.findProfile(+req.user.sub));
   }
 
-  @Patch('account/:id')
+  @Patch('account')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthAccessGuard, CheckUserAccessGuard)
-  // @CheckUserAccess({ withLocalKey: 'subs', withRequestKey: 'id' })
   @ApiResponse({
-    description: 'Updates user specified by `id`',
+    description: 'Updates authenticated user.',
     status: HttpStatus.OK
   })
   @SuccessResponse('Success')
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateAuthDto: UpdateAuthDto
-  ) {
-    return new ProfileDto(await this.auth.update(id, updateAuthDto));
+  async update(@Req() req: { user: JwtPayload }, @Body() body: UpdateAuthDto) {
+    return new ProfileDto(await this.auth.update(+req.user.sub, body));
   }
 
-  @Delete('account/:id')
+  @Delete('account')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthAccessGuard, CheckUserAccessGuard)
   @ApiResponse({
-    description: 'Deletes user specified by `id`',
+    description: 'Deletes account for authenticated user.',
     status: HttpStatus.OK
   })
   @SuccessResponse('Account deleted successfully.')
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    await this.auth.remove(id);
+  async remove(@Req() req: { user: JwtPayload }) {
+    await this.auth.remove(+req.user.sub);
   }
 
   @Post('account/image')
@@ -216,8 +212,8 @@ export class AuthController {
     status: HttpStatus.OK
   })
   @SuccessResponse('You password has been reset successfully.')
-  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-    await this.auth.resetPassword(resetPasswordDto);
+  async resetPassword(@Body() body: ResetPasswordDto) {
+    await this.auth.resetPassword(body);
   }
 
   @Post('password/:id')
