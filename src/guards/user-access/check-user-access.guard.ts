@@ -52,7 +52,7 @@ export class CheckUserAccessGuard implements CanActivate {
     }
 
     const idPropertyName = opts.idPropertyName
-      ? request.user[opts.idPropertyName]
+      ? (request.user[opts.idPropertyName] as string)
       : null;
     const routeParamName = opts.routeParamName
       ? request.params[opts.routeParamName]
@@ -70,7 +70,7 @@ export class CheckUserAccessGuard implements CanActivate {
       );
     }
 
-    if (idPropertyName !== routeParamName) {
+    if (idPropertyName?.toString() !== routeParamName?.toString()) {
       throw new UnauthorizedException('Not allowed.');
     }
 

@@ -19,12 +19,15 @@ export class ProfileDto {
   lastName: string;
 
   @Expose()
-  is2faEnrolled: boolean;
+  profilePictureUrl: string;
 
-  @Exclude()
+  @Expose()
+  is2faEnabled: boolean;
+
+  @Expose()
   cellPhoneNumber: string;
 
-  @Exclude()
+  @Expose()
   cellPhoneCarrier: string;
 
   @Exclude()
@@ -46,10 +49,19 @@ export class ProfileDto {
   resetPasswordOtpIssuedAt: string;
 
   @Exclude()
+  resetPasswordToken: string;
+
+  @Exclude()
+  resetPasswordTokenIssuedAt: string;
+
+  @Exclude()
   deletedAt: Date;
 
   @Expose()
   createdAt: Date;
+
+  @Expose()
+  updatedAt: Date;
 
   constructor(user: Partial<User | null>) {
     Object.assign(this, user instanceof User ? user.toJSON() : user);

@@ -65,7 +65,7 @@ export class User extends Model<
   declare profilePictureUrl?: string | null;
 
   @Column({ allowNull: false, defaultValue: false, type: DataType.BOOLEAN })
-  declare is2faEnrolled?: boolean;
+  declare is2faEnabled?: boolean;
 
   @Column({ allowNull: true, type: DataType.STRING(16) })
   declare cellPhoneNumber?: string | null;
@@ -94,6 +94,33 @@ export class User extends Model<
   @Column({ allowNull: true, type: DataType.DATE })
   declare resetPasswordOtpIssuedAt?: Date | null;
 
+  @Column({ allowNull: true, type: DataType.STRING(6) })
+  declare resetPasswordToken?: string | null;
+
+  @Column({ allowNull: true, type: DataType.DATE })
+  declare resetPasswordTokenIssuedAt?: Date | null;
+  /*
+  @Column({
+    allowNull: true,
+    defaultValue: () => Sequelize.literal('CURRENT_TIMESTAMP'),
+    type: DataType.DATE
+  })
+  declare createdAt?: Date | null;
+
+  @Column({
+    allowNull: true,
+    defaultValue: () => Sequelize.literal('CURRENT_TIMESTAMP'),
+    type: DataType.DATE
+  })
+  declare updatedAt?: Date | null;
+
+  @Column({
+    allowNull: true,
+    defaultValue: () => Sequelize.literal('CURRENT_TIMESTAMP'),
+    type: DataType.DATE
+  })
+  declare deletedAt?: Date | null;
+*/
   @BeforeCreate
   @BeforeUpdate
   static async onUserChange(user: User) {
@@ -114,6 +141,13 @@ export class User extends Model<
     }
 
     if (
+      user.getDataValue('resetPasswordToken') &&
+      user.changed('resetPasswordToken')
+    ) {
+      user.setDataValue('resetPasswordTokenIssuedAt', dayjs().utc().toDate());
+    }
+
+    if (
       user.getDataValue('verifyAccountOtp') &&
       user.changed('verifyAccountOtp')
     ) {
@@ -129,6 +163,13 @@ export class User extends Model<
     return await User.findOne({
       attributes: [[Sequelize.literal('1'), 'existing']],
       raw: true,
+      where
+    });
+  }
+
+  static async findOneWithPassword(where: Partial<InferAttributes<User>>) {
+    return await User.findOne({
+      attributes: { include: ['password'] },
       where
     });
   }

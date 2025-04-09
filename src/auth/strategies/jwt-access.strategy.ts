@@ -16,10 +16,12 @@ export class JwtAccessStrategy extends PassportStrategy(
   constructor(private readonly configService: ConfigService) {
     super({
       ignoreExpiration: false,
-      jwtFromRequest: (req: Request): string | null =>
-        Object.hasOwn(req.cookies, JWT_ACCESS_TOKEN_NAME)
+      jwtFromRequest: (req: Request): string | null => {
+        // console.log('Cookies: ', req.cookies);
+        return Object.hasOwn(req.cookies, JWT_ACCESS_TOKEN_NAME)
           ? (req.cookies[JWT_ACCESS_TOKEN_NAME] as string)
-          : null,
+          : null;
+      },
       secretOrKey: configService.getOrThrow('JWT_TOKEN_SECRET')
     });
   }

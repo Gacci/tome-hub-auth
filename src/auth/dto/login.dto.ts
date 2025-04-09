@@ -13,6 +13,6 @@ export class LoginAuthDto extends CredentialsDto {
   @IsOptional()
   @IsString()
   @Length(6)
-  @Matches(/^\d{6}$/)
+  @Matches(/^[A-Za-z0-9]{6}$/)
   loginOtp?: string;
 }

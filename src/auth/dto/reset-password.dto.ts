@@ -47,7 +47,7 @@ export class ResetPasswordDto {
   @IsString()
   @IsNotEmpty()
   @Match('newPassword')
-  confirmation: string;
+  confirmedPassword: string;
 
   @ApiProperty({
     description: "One-Time Password (OTP) sent to the user's email",
@@ -57,6 +57,6 @@ export class ResetPasswordDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Length(6)
-  resetPasswordOtp: string;
+  @Length(32)
+  resetPasswordToken: string;
 }

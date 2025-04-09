@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 import {
+  IsBoolean,
+  IsNumberString,
   IsOptional,
   IsPhoneNumber,
   IsString,
@@ -37,6 +39,7 @@ export class UpdateAuthDto {
     required: false
   })
   @IsOptional()
+  @IsNumberString()
   @IsPhoneNumber()
   cellPhoneNumber?: string | null;
 
@@ -58,9 +61,9 @@ export class UpdateAuthDto {
   profilePictureUrl?: string | null;
 
   @ApiProperty({
-    description: "User's college ID."
+    description: 'Enables/disables 2 factor authentication.'
   })
   @IsOptional()
-  @IsString()
-  collegeId?: number;
+  @IsBoolean()
+  is2faEnabled?: boolean;
 }

@@ -19,6 +19,10 @@ export function Match(property: string, validationOptions?: ValidationOptions) {
         validate(value: any, args: ValidationArguments) {
           console.log(value, args);
           const [relatedPropertyName] = args.constraints;
+          if (!relatedPropertyName) {
+            return false;
+          }
+
           const relatedValue = (args.object as any)[
             relatedPropertyName as string
           ];

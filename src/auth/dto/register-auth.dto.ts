@@ -13,5 +13,5 @@ export class RegisterAuthDto extends CredentialsDto {
   @IsString()
   @IsNotEmpty()
   @Match('password')
-  confirmation: string;
+  confirmed: string;
 }

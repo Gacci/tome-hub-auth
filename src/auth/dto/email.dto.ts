@@ -7,8 +7,8 @@ export class EmailDto {
     description: 'User email address',
     example: 'user@example.com'
   })
-  @IsEmail()
   @IsNotEmpty()
+  @IsEmail()
   @Matches(/\.edu$/, {
     message: 'Email must be an academic email (.edu)'
   })
