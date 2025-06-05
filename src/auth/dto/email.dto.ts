@@ -5,7 +5,7 @@ import { IsEmail, IsNotEmpty, Matches } from 'class-validator';
 export class EmailDto {
   @ApiProperty({
     description: 'User email address',
-    example: 'user@example.com'
+    example: 'users@example.com'
   })
   @IsNotEmpty()
   @IsEmail()

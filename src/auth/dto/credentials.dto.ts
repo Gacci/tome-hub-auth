@@ -12,7 +12,7 @@ import {
 export class CredentialsDto {
   @ApiProperty({
     description: 'User email address',
-    example: 'user@example.com'
+    example: 'users@example.com'
   })
   @IsEmail()
   @IsNotEmpty()

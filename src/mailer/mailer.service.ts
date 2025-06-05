@@ -82,7 +82,7 @@ export class MailerService {
 
   async notifyPasswordChanged(email: string) {
     try {
-      // Send email notifying user about password change
+      // Send email notifying users about password change
       await this.mailer.sendMail({
         html: /* HTML */ `<p>Dear user,</p>
           <p
@@ -112,7 +112,7 @@ export class MailerService {
 
   async sendPasswordResetRequest(email: string, otp: string) {
     try {
-      // Send email notifying user about password reset request
+      // Send email notifying users about password reset request
       await this.mailer.sendMail({
         html: /* HTML */ `<p>Dear user,</p>
           <p
@@ -142,7 +142,7 @@ export class MailerService {
 
   async notifySuccessfulLogin(email: string) {
     try {
-      // Send email notifying user about successful login
+      // Send email notifying users about successful login
       await this.mailer.sendMail({
         html: /* HTML */ `<p>Dear user,</p>
           <p

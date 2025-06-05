@@ -12,7 +12,7 @@ import {
 export class VerifyAccountDto {
   @ApiProperty({
     description: "User's registered email address",
-    example: 'user@example.com'
+    example: 'users@example.com'
   })
   @IsEmail()
   @IsNotEmpty()

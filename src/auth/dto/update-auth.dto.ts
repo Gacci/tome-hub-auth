@@ -54,7 +54,7 @@ export class UpdateAuthDto {
   cellPhoneCarrier?: string | null;
 
   @ApiProperty({
-    description: "User's profile picture URL."
+    description: "User's merchant picture URL."
   })
   @IsOptional()
   @IsString()

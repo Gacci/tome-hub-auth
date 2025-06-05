@@ -14,6 +14,7 @@ import * as crypto from 'crypto';
 import dayjs from 'dayjs';
 import { Op } from 'sequelize';
 
+import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
 import { CollegesService } from '../colleges/colleges.service';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { MailerService } from '../mailer/mailer.service';
@@ -31,7 +32,7 @@ import {
   TokenType
 } from './models/session-token.model';
 
-// export type JwtPayload = { exp?: number; sub: number; ref: string; type?: TokenType; };
+
 export type JwtTokens = { jwtAccessToken: string; jwtRefreshToken: string };
 export type JwtStatus = { blacklisted: boolean; type: TokenType };
 
@@ -40,6 +41,7 @@ export type JwtStatus = { blacklisted: boolean; type: TokenType };
 @Injectable()
 export class AuthService {
   constructor(
+    private readonly awsS3Service: AwsConfigService,
     private readonly collegesService: CollegesService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
@@ -49,81 +51,6 @@ export class AuthService {
     @InjectModel(SessionToken) private readonly sessions: typeof SessionToken,
     @InjectModel(User) private readonly users: typeof User
   ) {}
-  private generateRandomChars(size: number = 32): string {
-    return crypto
-      .randomBytes(size / 2)
-      .toString('hex')
-      .padStart(size, '0');
-  }
-
-  private generateOtp(size: number = 6) {
-    return (
-      parseInt(crypto.randomBytes(size / 2).toString('hex'), 16) % 1_000_000
-    )
-      .toString()
-      .padStart(size, '0');
-  }
-
-  private isOtpExpired(date: Date, seconds: number = 60) {
-    return dayjs().utc().isAfter(dayjs(date).utc().add(seconds, 'second'));
-  }
-
-  async getSessionTokens(user: User): Promise<JwtTokens> {
-    const tokenRef = crypto.randomBytes(32).toString('hex');
-    const jwtAccessToken = this.createAccessToken({
-      ref: tokenRef,
-      scope: user.collegeId,
-      sub: user.userId,
-      verified: user.isAccountVerified
-    });
-    const jwtRefreshToken = this.createRefreshToken({
-      ref: tokenRef,
-      scope: user.collegeId,
-      sub: user.userId,
-      verified: user.isAccountVerified
-    });
-
-    await this.sessions.bulkCreate([
-      {
-        familyId: tokenRef,
-        status: TokenStatus.ACTIVE,
-        token: jwtAccessToken,
-        type: TokenType.ACCESS,
-        userId: user.userId
-      },
-      {
-        familyId: tokenRef,
-        status: TokenStatus.ACTIVE,
-        token: jwtRefreshToken,
-        type: TokenType.REFRESH,
-        userId: user.userId
-      }
-    ]);
-
-    return {
-      jwtAccessToken,
-      jwtRefreshToken
-    };
-  }
-
-  private createAccessToken(payload: JwtPayload): string {
-    return this.jwtService.sign(
-      { ...payload, type: TokenType.ACCESS },
-      {
-        expiresIn: +this.configService.get('JWT_ACCESS_TOKEN_EXPIRES')
-      }
-    );
-  }
-
-  private createRefreshToken(payload: JwtPayload): string {
-    return this.jwtService.sign(
-      { ...payload, type: TokenType.REFRESH },
-      {
-        expiresIn: +this.configService.get('JWT_REFRESH_TOKEN_EXPIRES')
-      }
-    );
-  }
-
   async register(email: string, password: string): Promise<void> {
     if (!(await this.collegesService.emailDomainExists(email))) {
       throw new BadRequestException(
@@ -147,6 +74,8 @@ export class AuthService {
     this.rabbitMQService.publish<Partial<User>>(RoutingKey.USER_REGISTRATION, {
       createdAt: inserted.createdAt as Date,
       email: inserted.email,
+      membership: inserted.membership,
+      membershipExpiresAt: inserted.membershipExpiresAt,
       updatedAt: inserted.updatedAt as Date,
       userId: inserted.userId
     });
@@ -201,6 +130,8 @@ export class AuthService {
 
     this.rabbitMQService.publish(RoutingKey.USER_UPDATE, {
       isAccountVerified: updated.isAccountVerified,
+      membership: updated.membership,
+      membershipExpiresAt: updated.membershipExpiresAt,
       userId: updated.userId
     });
   }
@@ -295,13 +226,23 @@ export class AuthService {
     this.rabbitMQService.publish(
       RoutingKey.USER_UPDATE,
       Object.fromEntries(
-        [...Object.keys(update), 'updatedAt', 'userId'].map(
-          (k: keyof typeof update) => [k, user[k as keyof typeof user]]
-        )
+        ['updatedAt', 'userId']
+          .concat(Object.keys(update))
+          .map((k: keyof typeof update) => [k, user[k as keyof typeof user]])
       )
     );
 
     return user;
+  }
+
+  async updateProfilePicture(userId: number, file: Express.Multer.File) {
+    const key = file
+      ? await this.awsS3Service.upload(S3Bucket.PROFILES, file)
+      : null;
+
+    return await this.update(userId, {
+      profilePictureUrl: key
+    });
   }
 
   async remove(userId: number) {
@@ -344,7 +285,7 @@ export class AuthService {
     }
 
     const resetPasswordOtp = this.generateOtp(6);
-    // await this.mailer.sendPasswordResetRequest(user.email, resetPasswordOtp);
+    // await this.mailer.sendPasswordResetRequest(users.email, resetPasswordOtp);
     await user.update({
       resetPasswordOtp,
       resetPasswordToken: null,
@@ -489,6 +430,8 @@ export class AuthService {
     );
 
     const jwtAccessToken = this.createAccessToken({
+      mex: decodedRefreshToken.mex,
+      mbr: decodedRefreshToken.mbr,
       ref: decodedRefreshToken.ref,
       scope: decodedRefreshToken.scope,
       sub: decodedRefreshToken.sub,
@@ -542,5 +485,82 @@ export class AuthService {
     );
 
     return true;
+  }
+
+
+  private generateRandomChars(size: number = 32): string {
+    return crypto
+      .randomBytes(size / 2)
+      .toString('hex')
+      .padStart(size, '0');
+  }
+
+  private generateOtp(size: number = 6) {
+    return (
+      parseInt(crypto.randomBytes(size / 2).toString('hex'), 16) % 1_000_000
+    )
+      .toString()
+      .padStart(size, '0');
+  }
+
+  private isOtpExpired(date: Date, seconds: number = 60) {
+    return dayjs().utc().isAfter(dayjs(date).utc().add(seconds, 'second'));
+  }
+
+  async getSessionTokens(user: User): Promise<JwtTokens> {
+    const tokenRef = crypto.randomBytes(32).toString('hex');
+    const jwtTokenPayload = {
+      mbr: user.membership,
+      mex: user.membershipExpiresAt?.getTime(),
+      ref: tokenRef,
+      scope: user.collegeId,
+      sub: user.userId,
+      verified: user.isAccountVerified
+    };
+
+    const jwtAccessToken = this.createAccessToken(jwtTokenPayload);
+    const jwtRefreshToken = this.createRefreshToken(jwtTokenPayload);
+
+    const sessionRecordPayload = {
+      familyId: tokenRef,
+      status: TokenStatus.ACTIVE,
+      token: jwtAccessToken,
+      type: TokenType.ACCESS,
+      userId: user.userId
+    };
+
+    await this.sessions.bulkCreate([
+      {
+        ...sessionRecordPayload,
+        type: TokenType.ACCESS
+      },
+      {
+        ...sessionRecordPayload,
+        type: TokenType.REFRESH
+      }
+    ]);
+
+    return {
+      jwtAccessToken,
+      jwtRefreshToken
+    };
+  }
+
+  private createAccessToken(payload: JwtPayload): string {
+    return this.jwtService.sign(
+      { ...payload, type: TokenType.ACCESS },
+      {
+        expiresIn: +this.configService.get('JWT_ACCESS_TOKEN_EXPIRES')
+      }
+    );
+  }
+
+  private createRefreshToken(payload: JwtPayload): string {
+    return this.jwtService.sign(
+      { ...payload, type: TokenType.REFRESH },
+      {
+        expiresIn: +this.configService.get('JWT_REFRESH_TOKEN_EXPIRES')
+      }
+    );
   }
 }

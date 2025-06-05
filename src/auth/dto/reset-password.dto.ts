@@ -15,7 +15,7 @@ import { Match } from '../../common/validators/match.decorator';
 export class ResetPasswordDto {
   @ApiProperty({
     description: "User's registered email address",
-    example: 'user@example.com'
+    example: 'users@example.com'
   })
   @IsEmail()
   @IsNotEmpty()
@@ -50,7 +50,7 @@ export class ResetPasswordDto {
   confirmedPassword: string;
 
   @ApiProperty({
-    description: "One-Time Password (OTP) sent to the user's email",
+    description: "One-Time Password (OTP) sent to the users's email",
     example: '123456',
     maxLength: 6,
     minLength: 6

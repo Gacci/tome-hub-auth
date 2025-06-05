@@ -1,5 +1,6 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Expose, plainToInstance } from 'class-transformer';
 
+import { Membership } from '../../common/enums/membership.enum';
 import { User } from '../../user/user.model';
 
 export class ProfileDto {
@@ -7,10 +8,10 @@ export class ProfileDto {
   userId: number;
 
   @Expose()
-  email: string;
+  collegeId: number;
 
-  @Exclude()
-  password: string;
+  @Expose()
+  email: string;
 
   @Expose()
   firstName: string;
@@ -30,32 +31,11 @@ export class ProfileDto {
   @Expose()
   cellPhoneCarrier: string;
 
-  @Exclude()
-  verifyAccountOtp: string;
+  @Expose()
+  membership: Membership;
 
-  @Exclude()
-  verifyAccountOtpIssuedAt: string;
-
-  @Exclude()
-  loginOtp: string;
-
-  @Exclude()
-  loginOtpIssuedAt: string;
-
-  @Exclude()
-  resetPasswordOtp: string;
-
-  @Exclude()
-  resetPasswordOtpIssuedAt: string;
-
-  @Exclude()
-  resetPasswordToken: string;
-
-  @Exclude()
-  resetPasswordTokenIssuedAt: string;
-
-  @Exclude()
-  deletedAt: Date;
+  @Expose()
+  membershipExpiresAt: Date;
 
   @Expose()
   createdAt: Date;
@@ -64,6 +44,12 @@ export class ProfileDto {
   updatedAt: Date;
 
   constructor(user: Partial<User | null>) {
-    Object.assign(this, user instanceof User ? user.toJSON() : user);
+    Object.assign(this, user);
+  }
+
+  static from(user: Partial<User | null>) {
+    return plainToInstance(ProfileDto, user, {
+      excludeExtraneousValues: true
+    });
   }
 }

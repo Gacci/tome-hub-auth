@@ -5,7 +5,7 @@ export type CheckUserAccessGuardOptions = {
   routeParamName?: string;
 };
 
-export const CHECK_USER_ACCESS_OPTIONS = 'check-user-access-options';
+export const CHECK_USER_ACCESS_OPTIONS = 'check-users-access-options';
 
 export const CheckUserAccess = (opts: CheckUserAccessGuardOptions) =>
   SetMetadata(CHECK_USER_ACCESS_OPTIONS, opts);

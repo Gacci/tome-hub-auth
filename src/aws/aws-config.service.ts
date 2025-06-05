@@ -73,12 +73,6 @@ export class AwsConfigService {
       })
     );
 
-    return {
-      filename: unique,
-      url:
-        'prod' === this.configService.get<string>('NODE_ENV', 'dev')
-          ? `https://${bucketName}.s3.${this.configService.get('AWS_S3_REGION')}.amazonaws.com/${unique}`
-          : `http://localhost:4566/${bucketName}/${unique}`
-    };
+    return unique;
   }
 }

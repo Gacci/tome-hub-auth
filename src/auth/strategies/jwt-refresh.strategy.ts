@@ -6,7 +6,7 @@ import { Request } from 'express';
 import { Strategy } from 'passport-jwt';
 
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
-import { JWT_REFRESH_TOKEN_NAME } from '../../config/constants';
+import { JWT_REFRESH_TOKEN_NAME} from '../../config/constants';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
@@ -16,10 +16,11 @@ export class JwtRefreshStrategy extends PassportStrategy(
   constructor(private readonly configService: ConfigService) {
     super({
       ignoreExpiration: false,
-      jwtFromRequest: (req: Request): string | null =>
-        Object.hasOwn(req.cookies, JWT_REFRESH_TOKEN_NAME)
+      jwtFromRequest: (req: Request): string | null => {
+        return Object.hasOwn(req.cookies, JWT_REFRESH_TOKEN_NAME)
           ? (req.cookies[JWT_REFRESH_TOKEN_NAME] as string)
-          : null,
+          : null;
+      },
       secretOrKey: configService.getOrThrow('JWT_TOKEN_SECRET')
     });
   }

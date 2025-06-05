@@ -48,10 +48,10 @@ export class JwtAuthAccessGuard
   }
 
   // // Optionally override handleRequest to customize error handling
-  // handleRequest(err, user, info) {
-  //   if (err || !user) {
+  // handleRequest(err, users, info) {
+  //   if (err || !users) {
   //     throw err || new UnauthorizedException('Authentication failed');
   //   }
-  //   return user;
+  //   return users;
   // }
 }

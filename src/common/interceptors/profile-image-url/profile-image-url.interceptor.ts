@@ -28,6 +28,10 @@ export class ProfileImageUrlInterceptor implements NestInterceptor {
   }
 
   private getImageUrl(profilePictureUrl: string) {
+    if (profilePictureUrl?.startsWith('http')) {
+      return profilePictureUrl;
+    }
+
     return 'prod' === this.configService.get<string>('NODE_ENV', 'dev')
       ? `https://${S3Bucket.PROFILES}.s3.${this.configService.get('AWS_S3_REGION')}.amazonaws.com/${profilePictureUrl}`
       : `http://localhost:4566/${S3Bucket.PROFILES}/${profilePictureUrl}`;

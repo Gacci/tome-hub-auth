@@ -12,7 +12,6 @@ import {
   ParseIntPipe,
   Patch,
   Post,
-  Query,
   Req,
   Res,
   UploadedFile,
@@ -25,7 +24,7 @@ import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { CookieOptions, Request, Response } from 'express';
 
-import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
+// import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
 import { SuccessResponse } from '../common/decorators/success-response.decorator';
 import { ProfileImageUrlInterceptor } from '../common/interceptors/profile-image-url/profile-image-url.interceptor';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
@@ -34,7 +33,7 @@ import {
   JWT_REFRESH_TOKEN_NAME
 } from '../config/constants';
 import { CheckUserAccessGuard } from '../guards/user-access/check-user-access.guard';
-// import { userProfileStorage } from '../common/storage/user-profile-storage';
+// import { userProfileStorage } from '../common/storage/users-merchant-storage';
 import { AuthService } from './auth.service';
 import { CredentialsDto } from './dto/credentials.dto';
 import { EmailDto } from './dto/email.dto';
@@ -54,13 +53,13 @@ import { JwtAuthRefreshGuard } from './guards/jwt-auth-refresh/jwt-auth-refresh.
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
-    private readonly awsConfigService: AwsConfigService,
+    // private readonly awsConfigService: AwsConfigService,
     private readonly config: ConfigService
   ) {}
 
   @Post('account/register')
   @ApiResponse({
-    description: 'Registers a new user',
+    description: 'Registers a new users',
     status: HttpStatus.CREATED
   })
   @SuccessResponse('Successfully created account.')
@@ -71,7 +70,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('account/register/otp/resend')
   @ApiResponse({
-    description: 'Emails an OTP for user to confirm registration.',
+    description: 'Emails an OTP for users to confirm registration.',
     status: HttpStatus.OK
   })
   @SuccessResponse(
@@ -84,7 +83,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('account/verify')
   @ApiResponse({
-    description: 'Verifies OTP for user to confirm registration.',
+    description: 'Verifies OTP for users to confirm registration.',
     status: HttpStatus.OK
   })
   @SuccessResponse('You account has been successfully verified.')
@@ -96,7 +95,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
     description:
-      'Grants access to user (requires OTP if user is enrolled in 2FA authentication).',
+      'Grants access to users (requires OTP if users is enrolled in 2FA authentication).',
     status: HttpStatus.OK
   })
   // @SuccessResponse('Login successful.')
@@ -133,10 +132,10 @@ export class AuthController {
     };
   }
 
-  @Post('account/logout')
+  @Delete('account/logout')
   @UseGuards(JwtAuthRefreshGuard)
   @ApiResponse({
-    description: 'Logs out authenticated user.',
+    description: 'Logs out authenticated users.',
     status: HttpStatus.OK
   })
   @SuccessResponse('Logged out successfully')
@@ -144,6 +143,9 @@ export class AuthController {
     @Req() req: { user: JwtPayload },
     @Res({ passthrough: true }) res: Response
   ) {
+    console.log(
+      '**************************  LOG OUT ************************** '
+    );
     // const isProdEnv = ['prod', 'production'].includes(
     //   this.config.get<string>('NODE_ENV', '')
     // );
@@ -173,19 +175,19 @@ export class AuthController {
   @UseInterceptors(ProfileImageUrlInterceptor)
   @UseGuards(JwtAuthAccessGuard)
   @ApiResponse({
-    description: "Reads authenticated user's profile.",
+    description: "Reads authenticated users's merchant.",
     status: HttpStatus.OK
   })
   // @SuccessResponse('Success')
   async findOne(@Req() req: { user: JwtPayload }) {
-    return new ProfileDto(await this.auth.findProfile(+req.user.sub));
+    return ProfileDto.from(await this.auth.findProfile(+req.user.sub));
   }
 
   @Patch('account/:id')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthAccessGuard, CheckUserAccessGuard)
   @ApiResponse({
-    description: 'Updates authenticated user.',
+    description: 'Updates authenticated users.',
     status: HttpStatus.OK
   })
   // @SuccessResponse('Success')
@@ -201,7 +203,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthAccessGuard, CheckUserAccessGuard)
   @ApiResponse({
-    description: 'Deletes account for authenticated user.',
+    description: 'Deletes account for authenticated users.',
     status: HttpStatus.OK
   })
   @SuccessResponse('Account deleted successfully.')
@@ -213,10 +215,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthAccessGuard)
   @ApiResponse({
-    description: 'Updates profile image for authenticated user.',
+    description: 'Updates merchant image for authenticated users.',
     status: HttpStatus.OK
   })
-  @SuccessResponse('Successfully uploaded profile image.')
+  @SuccessResponse('Successfully uploaded merchant image.')
   @UseInterceptors(FileInterceptor('file')) // { storage: userProfileStorage }
   async setProfilePicture(
     @Req() req: { user: JwtPayload },
@@ -230,17 +232,20 @@ export class AuthController {
     )
     uploaded: Express.Multer.File
   ) {
-    const response = await this.awsConfigService.upload(
-      S3Bucket.PROFILES,
-      uploaded
+    return ProfilePictureUrlDto.from(
+      await this.auth.updateProfilePicture(+req.user.sub, uploaded)
     );
-
-    new ProfilePictureUrlDto(
-      await this.auth.update(+req.user.sub, {
-        // profilePictureUrl: uploaded.filename
-        profilePictureUrl: response.filename
-      })
-    );
+    // const response = await this.awsConfigService.upload(
+    //   S3Bucket.PROFILES,
+    //   uploaded
+    // );
+    //
+    // new ProfilePictureUrlDto(
+    //   await this.auth.update(+req.users.sub, {
+    //     // profilePictureUrl: uploaded.filename
+    //     profilePictureUrl: response.filename
+    //   })
+    // );
   }
 
   @Post('password/reset/otp/send')
@@ -265,7 +270,7 @@ export class AuthController {
   @Post('password/reset')
   @HttpCode(HttpStatus.OK)
   @ApiResponse({
-    description: 'Resets password for user providing OTP.',
+    description: 'Resets password for users providing OTP.',
     status: HttpStatus.OK
   })
   @SuccessResponse('You password has been reset successfully.')
@@ -277,7 +282,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthAccessGuard, CheckUserAccessGuard)
   @ApiResponse({
-    description: 'Changes password for user specified by `id`.',
+    description: 'Changes password for users specified by `id`.',
     status: HttpStatus.OK
   })
   @SuccessResponse('You password has been successfully changed.')
