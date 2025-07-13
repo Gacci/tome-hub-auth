@@ -35,10 +35,6 @@ export class User extends Model<
   @Column({ allowNull: true, type: DataType.INTEGER })
   declare collegeId?: number;
 
-  // Define the relationship to College (belongs to)
-  @BelongsTo(() => College)
-  declare college?: College;
-
   @Column({ allowNull: false, type: DataType.STRING(128), unique: true })
   declare email: string;
 
@@ -59,7 +55,7 @@ export class User extends Model<
     defaultValue: Membership.FREE,
     type: DataType.ENUM(...Object.values(Membership))
   })
-  declare membership?: Membership.FREE;
+  declare membership?: Membership;
 
   @Column({
     allowNull: true,
@@ -125,6 +121,10 @@ export class User extends Model<
   })
   declare deletedAt?: Date | null;
 */
+
+  @BelongsTo(() => College)
+  declare college?: College;
+
   @BeforeCreate
   @BeforeUpdate
   static async onUserChange(user: User) {

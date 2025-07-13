@@ -19,7 +19,6 @@ export interface JwtPayload {
   sub: number;
   mbr?: Membership;
   mex?: number;
-  tex?: number;
   type?: TokenType;
   verified?: boolean;
 }

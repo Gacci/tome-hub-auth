@@ -430,8 +430,8 @@ export class AuthService {
     );
 
     const jwtAccessToken = this.createAccessToken({
-      mex: decodedRefreshToken.mex,
       mbr: decodedRefreshToken.mbr,
+      mex: decodedRefreshToken.mex,
       ref: decodedRefreshToken.ref,
       scope: decodedRefreshToken.scope,
       sub: decodedRefreshToken.sub,
@@ -486,7 +486,6 @@ export class AuthService {
 
     return true;
   }
-
 
   private generateRandomChars(size: number = 32): string {
     return crypto
