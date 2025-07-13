@@ -6,7 +6,7 @@ import { Request } from 'express';
 import { Strategy } from 'passport-jwt';
 
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
-import { JWT_REFRESH_TOKEN_NAME} from '../../config/constants';
+import { JWT_REFRESH_TOKEN_NAME } from '../../config/constants';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(

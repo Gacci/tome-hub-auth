@@ -32,7 +32,6 @@ import {
   TokenType
 } from './models/session-token.model';
 
-
 export type JwtTokens = { jwtAccessToken: string; jwtRefreshToken: string };
 export type JwtStatus = { blacklisted: boolean; type: TokenType };
 

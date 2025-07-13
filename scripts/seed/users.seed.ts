@@ -1,11 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
-
-
 import { faker } from '@faker-js/faker';
-
-
 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -13,17 +9,11 @@ import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { College } from 'src/colleges/models/college.model';
 
-
-
 import { AppModule } from '../../src/app.module';
-import { Membership } from "../../src/common/enums/membership.enum";
-import { User } from '../../src/users/models/user.model';
+import { Membership } from '../../src/common/enums/membership.enum';
+import { User } from '../../src/user/user.model';
 
-
-
-
-
-async function seedUserRatings(size: number = 100, nonRatedOnly: boolean = false) {
+async function seedUserRatings(size: number = 100) {
   const app = await NestFactory.createApplicationContext(AppModule);
   const logger = new Logger('ratings.seed');
 
@@ -50,20 +40,22 @@ async function seedUserRatings(size: number = 100, nonRatedOnly: boolean = false
     const end = Math.min((batch + 1) * batchSize, size);
 
     for (let i = start; i < end; i++) {
-      const college = colleges[Math.floor(faker.number.int({ min: 0, max: users.length }))];
+      const college =
+        colleges[Math.floor(faker.number.int({ min: 0, max: users.length }))];
       const firstName = faker.person.firstName();
       const lastName = faker.person.lastName();
       console.log(college);
       users.push({
         collegeId: college?.['collegeId'],
-        email: `${firstName}.${lastName}@${college?.['emailDomain']}`.toLowerCase(),
+        email:
+          `${firstName}.${lastName}@${college?.['emailDomain']}`.toLowerCase(),
         firstName,
         lastName,
-        profilePictureUrl: faker.image.personPortrait(),
         membership: faker.helpers.arrayElement(Object.values(Membership)),
-        membershipExpiresAt: faker.number.int({ min: 0, max: 1})
+        membershipExpiresAt: faker.number.int({ max: 1, min: 0 })
           ? faker.date.past()
-          : faker.date.anytime()
+          : faker.date.anytime(),
+        profilePictureUrl: faker.image.personPortrait()
       });
     }
 
@@ -81,14 +73,13 @@ async function seedUserRatings(size: number = 100, nonRatedOnly: boolean = false
   process.exit(0);
 }
 
-const size = process.env.SEED_SIZE
-  ? parseInt(process.env.SEED_SIZE, 10)
-  : 100;
+const size = process.env.SEED_SIZE ? parseInt(process.env.SEED_SIZE, 10) : 100;
 
-const noCollegeOnly = process.env.NO_COLLEGE_ONLY
-&& /^true|false$/.test(process.env.NO_COLLEGE_ONLY)
-  ? JSON.parse(process.env.NO_COLLEGE_ONLY)
-  : false;
+// const noCollegeOnly =
+//   process.env.NO_COLLEGE_ONLY &&
+//   /^true|false$/.test(process.env.NO_COLLEGE_ONLY)
+//     ? JSON.parse(process.env.NO_COLLEGE_ONLY)
+//     : false;
 
 //  SEED_SIZE=50000 NON_RATED_ONLY=false npm run seed:ratings
-void seedUserRatings(size, noCollegeOnly);
+void seedUserRatings(size);

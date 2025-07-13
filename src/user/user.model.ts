@@ -1,16 +1,27 @@
 import * as bcrypt from 'bcryptjs';
 import dayjs from 'dayjs';
-import { CreationOptional, InferAttributes, InferCreationAttributes, Sequelize } from 'sequelize';
-import { BeforeCreate, BeforeUpdate, BelongsTo, Column, DataType, DefaultScope, ForeignKey, Model, PrimaryKey, Scopes, Table } from 'sequelize-typescript';
+import {
+  CreationOptional,
+  InferAttributes,
+  InferCreationAttributes,
+  Sequelize
+} from 'sequelize';
+import {
+  BeforeCreate,
+  BeforeUpdate,
+  BelongsTo,
+  Column,
+  DataType,
+  DefaultScope,
+  ForeignKey,
+  Model,
+  PrimaryKey,
+  Scopes,
+  Table
+} from 'sequelize-typescript';
 import { Membership } from 'src/common/enums/membership.enum';
 
-
-
 import { College } from '../colleges/models/college.model';
-
-
-
-
 
 @DefaultScope(() => ({
   attributes: { exclude: ['password'] }
