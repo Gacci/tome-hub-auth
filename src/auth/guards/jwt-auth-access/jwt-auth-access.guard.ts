@@ -47,11 +47,23 @@ export class JwtAuthAccessGuard
     return true;
   }
 
-  // // Optionally override handleRequest to customize error handling
-  // handleRequest(err, users, info) {
-  //   if (err || !users) {
-  //     throw err || new UnauthorizedException('Authentication failed');
-  //   }
-  //   return users;
-  // }
+  // Optionally override handleRequest to customize error handling
+  handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any) {
+    console.log(
+      '\nJwtAuthAccess\n',
+      '\nERROR: \n', err,
+      '\nJWT: \n', jwt,
+      '\nINFO\n', info
+    );
+
+    if (err) {
+      throw err;
+    }
+
+    if (!jwt) {
+      throw new UnauthorizedException('NoAuthToken: Auth token missing.');
+    }
+
+    return jwt;
+  }
 }

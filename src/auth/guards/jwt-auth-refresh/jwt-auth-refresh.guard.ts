@@ -34,16 +34,35 @@ export class JwtAuthRefreshGuard
 
     if (request.user.type !== TokenType.REFRESH) {
       throw new UnauthorizedException(
-        `Unexpected token type: ${request.user.type}`
+        `Refresh token error: unexpected token type: ${request.user.type}`
       );
     }
 
     if (
       await this.redis.getKey(request.cookies[JWT_REFRESH_TOKEN_NAME] as string)
     ) {
-      throw new UnauthorizedException('Revoked token.');
+      throw new UnauthorizedException('Refresh token error: revoked token.');
     }
 
     return true;
+  }
+
+  handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any): JwtPayload {
+    console.log(
+      '\nJwtAuthRefresh\n',
+      '\nERROR: \n', err,
+      '\nJWT: \n', jwt,
+      '\nINFO\n', info
+    );
+
+    if (err) {
+      throw err;
+    }
+
+    if (!jwt) {
+      throw new UnauthorizedException('NoAuthToken: Auth token missing.');
+    }
+
+    return jwt;
   }
 }

@@ -107,14 +107,15 @@ export class AuthService {
       throw new NotFoundException('User not found.');
     }
 
-    if (!user.verifyAccountOtp) {
-      throw new UnauthorizedException('Missing OTP');
+    if (user.isAccountVerified) {
+      throw new BadRequestException('Account is already verified.');
     }
 
-    if (
-      !user.verifyAccountOtpIssuedAt ||
-      this.isOtpExpired(user.verifyAccountOtpIssuedAt)
-    ) {
+    if (!user.verifyAccountOtp || !user.verifyAccountOtpIssuedAt) {
+      throw new UnauthorizedException('Account verification OTP not issued.');
+    }
+
+    if (this.isOtpExpired(user.verifyAccountOtpIssuedAt)) {
       throw new BadRequestException('Verification OTP has expired.');
     }
 
@@ -129,8 +130,8 @@ export class AuthService {
 
     this.rabbitMQService.publish(RoutingKey.USER_UPDATE, {
       isAccountVerified: updated.isAccountVerified,
-      membership: updated.membership,
-      membershipExpiresAt: updated.membershipExpiresAt,
+      // membership: updated.membership,
+      // membershipExpiresAt: updated.membershipExpiresAt,
       userId: updated.userId
     });
   }
@@ -147,10 +148,6 @@ export class AuthService {
     });
     if (!user) {
       throw new NotFoundException('User not found.');
-    }
-
-    if (!user.isAccountVerified) {
-      throw new UnauthorizedException('Your account is not verified.');
     }
 
     if (!(await user.isSamePassword(credentials.password))) {
@@ -304,16 +301,16 @@ export class AuthService {
       throw new NotFoundException('User not found.');
     }
 
-    console.log(email, resetPasswordOtp, user.email, user.resetPasswordOtp);
-    if (user.resetPasswordOtp !== resetPasswordOtp) {
-      throw new BadRequestException('OTP is invalid.');
+    if (!user.resetPasswordOtp || !user.resetPasswordOtpIssuedAt) {
+      throw new BadRequestException('Password reset OTP has not been issued.');
     }
 
-    if (
-      !user.resetPasswordOtpIssuedAt ||
-      this.isOtpExpired(user.resetPasswordOtpIssuedAt)
-    ) {
-      throw new ForbiddenException('OTP has expired or is invalid.');
+    if (this.isOtpExpired(user.resetPasswordOtpIssuedAt)) {
+      throw new ForbiddenException('Password reset OTP is expired or invalid.');
+    }
+
+    if (user.resetPasswordOtp !== resetPasswordOtp) {
+      throw new BadRequestException('Password reset OTP is invalid.');
     }
 
     const resetPasswordToken = this.generateRandomChars(32);
@@ -329,14 +326,15 @@ export class AuthService {
     }
 
     if (user.resetPasswordToken !== update.resetPasswordToken) {
-      throw new UnauthorizedException('Invalid OTP.');
+      throw new UnauthorizedException('Password reset OTP is invalid.');
     }
 
-    if (
-      !user.resetPasswordTokenIssuedAt ||
-      this.isOtpExpired(user.resetPasswordTokenIssuedAt)
-    ) {
-      throw new ForbiddenException('OTP has expired or is invalid.');
+    if (!user.resetPasswordTokenIssuedAt) {
+      throw new BadRequestException('Password reset OTP has not been issued.');
+    }
+
+    if (this.isOtpExpired(user.resetPasswordTokenIssuedAt)) {
+      throw new ForbiddenException('Password reset OTP has expired.');
     }
 
     if (await user.isSamePassword(update.newPassword)) {
@@ -419,7 +417,8 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token required.');
     }
 
-    if (!(await this.users.exists({ userId: +decodedRefreshToken.sub }))) {
+    const user = await this.users.findByPk(decodedRefreshToken.sub);
+    if (!user) {
       throw new BadRequestException('User no longer exists.');
     }
 
@@ -429,13 +428,14 @@ export class AuthService {
     );
 
     const jwtAccessToken = this.createAccessToken({
-      mbr: decodedRefreshToken.mbr,
-      mex: decodedRefreshToken.mex,
+      mbr: user.membership,
+      mex: user.membershipExpiresAt?.getTime(),
       ref: decodedRefreshToken.ref,
       scope: decodedRefreshToken.scope,
       sub: decodedRefreshToken.sub,
-      verified: decodedRefreshToken.verified
+      verified: user.isAccountVerified
     });
+
     await this.sessions.create({
       familyId: decodedRefreshToken.ref,
       status: TokenStatus.ACTIVE,

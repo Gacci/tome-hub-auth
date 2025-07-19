@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -22,16 +23,17 @@ import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
+
+
 import { CookieOptions, Request, Response } from 'express';
+
+
 
 // import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
 import { SuccessResponse } from '../common/decorators/success-response.decorator';
 import { ProfileImageUrlInterceptor } from '../common/interceptors/profile-image-url/profile-image-url.interceptor';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import {
-  JWT_ACCESS_TOKEN_NAME,
-  JWT_REFRESH_TOKEN_NAME
-} from '../config/constants';
+import { JWT_ACCESS_TOKEN_NAME, JWT_REFRESH_TOKEN_NAME } from '../config/constants';
 import { CheckUserAccessGuard } from '../guards/user-access/check-user-access.guard';
 // import { userProfileStorage } from '../common/storage/users-merchant-storage';
 import { AuthService } from './auth.service';
@@ -47,6 +49,10 @@ import { UpdateAuthDto } from './dto/update-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
 import { JwtAuthAccessGuard } from './guards/jwt-auth-access/jwt-auth-access.guard';
 import { JwtAuthRefreshGuard } from './guards/jwt-auth-refresh/jwt-auth-refresh.guard';
+
+
+
+
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -69,6 +75,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('account/register/otp/resend')
+  @UseGuards(JwtAuthAccessGuard)
   @ApiResponse({
     description: 'Emails an OTP for users to confirm registration.',
     status: HttpStatus.OK
@@ -76,18 +83,33 @@ export class AuthController {
   @SuccessResponse(
     'You will receive an OTP if we are able to match you in our records.'
   )
-  async sendRegisterOtp(@Body() body: EmailDto) {
+  async sendRegisterOtp(
+    @Req() req: { user: JwtPayload },
+    @Body() body: EmailDto
+  ) {
+    if (req.user.verified) {
+      throw new BadRequestException('Account is already verified.');
+    }
+
     await this.auth.sendRegisterOtp(body.email);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('account/verify')
+  @UseGuards(JwtAuthAccessGuard)
   @ApiResponse({
     description: 'Verifies OTP for users to confirm registration.',
     status: HttpStatus.OK
   })
   @SuccessResponse('You account has been successfully verified.')
-  async verifyAccount(@Body() body: VerifyAccountDto) {
+  async verifyAccount(
+    @Req() req: { user: JwtPayload },
+    @Body() body: VerifyAccountDto
+  ) {
+    if (req.user.verified) {
+      throw new BadRequestException('Account is already verified.');
+    }
+
     await this.auth.verifyAccount(body);
   }
 
@@ -315,6 +337,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response
   ) {
     const jwtAccessToken = await this.auth.exchangeAccessToken(req.user);
+    console.log(jwtAccessToken);
     const isProdEnv = ['prod', 'production'].includes(
       this.config.get<string>('NODE_ENV', '')
     );
