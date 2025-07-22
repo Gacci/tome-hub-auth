@@ -32,6 +32,7 @@ export class JwtAuthRefreshGuard
       .switchToHttp()
       .getRequest<Request & { user: JwtPayload }>();
 
+    console.log(request.cookies);
     if (request.user.type !== TokenType.REFRESH) {
       throw new UnauthorizedException(
         `Refresh token error: unexpected token type: ${request.user.type}`

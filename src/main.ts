@@ -9,7 +9,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-// import { NextFunction } from 'express';
+import { NextFunction } from 'express';
 import * as fs from 'node:fs';
 
 import { AppModule } from './app.module';
@@ -53,18 +53,10 @@ async function bootstrap() {
   });
 
   // Explicitly handle OPTIONS requests (preflight)
-  // app.use((req: Request, res: Response, next: NextFunction) => {
-  //   console.log('----------------------------', req.method);
-  //   if (req.method === 'OPTIONS') {
-  //     // res.header(
-  //     //   'Access-Control-Allow-Methods',
-  //     //   'GET, POST, PUT, DELETE, OPTIONS'
-  //     // );
-  //     res.headers.set('Access-Control-Allow-Headers', '*');
-  //   } else {
-  //     next();
-  //   }
-  // });
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    console.log('----------------------------', req);
+    next();
+  });
 
   const port = process.env.PORT ? +process.env.PORT : 3000;
   try {

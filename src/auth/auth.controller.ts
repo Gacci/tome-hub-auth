@@ -23,17 +23,16 @@ import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
-
-
 import { CookieOptions, Request, Response } from 'express';
-
-
 
 // import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
 import { SuccessResponse } from '../common/decorators/success-response.decorator';
 import { ProfileImageUrlInterceptor } from '../common/interceptors/profile-image-url/profile-image-url.interceptor';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { JWT_ACCESS_TOKEN_NAME, JWT_REFRESH_TOKEN_NAME } from '../config/constants';
+import {
+  JWT_ACCESS_TOKEN_NAME,
+  JWT_REFRESH_TOKEN_NAME
+} from '../config/constants';
 import { CheckUserAccessGuard } from '../guards/user-access/check-user-access.guard';
 // import { userProfileStorage } from '../common/storage/users-merchant-storage';
 import { AuthService } from './auth.service';
@@ -49,10 +48,6 @@ import { UpdateAuthDto } from './dto/update-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
 import { JwtAuthAccessGuard } from './guards/jwt-auth-access/jwt-auth-access.guard';
 import { JwtAuthRefreshGuard } from './guards/jwt-auth-refresh/jwt-auth-refresh.guard';
-
-
-
-
 
 @ApiTags('Auth')
 @Controller('auth')
