@@ -17,13 +17,18 @@ import { ResponseInterceptor } from './common/interceptors/success-response/succ
 
 async function bootstrap() {
   dayjs.extend(utc);
+  const isProdEnv = process.env.NODE_ENV === 'prod';
 
   const logger = new Logger('main.ts');
   const app = await NestFactory.create(AppModule, {
-    httpsOptions: {
-      cert: fs.readFileSync('./localhost.pem'),
-      key: fs.readFileSync('./localhost-key.pem')
-    }
+    ...(isProdEnv
+      ? {
+          httpsOptions: {
+            cert: fs.readFileSync('./localhost.pem'),
+            key: fs.readFileSync('./localhost-key.pem')
+          }
+        }
+      : {})
   });
   const config = new DocumentBuilder()
     .setTitle('API Documentation')
@@ -60,7 +65,8 @@ async function bootstrap() {
 
   const port = process.env.PORT ? +process.env.PORT : 3000;
   try {
-    await app.listen(port);
+    await app.listen(port, !isProdEnv ? 'localhost' : '0.0.0.0');
+
     logger.log(
       `************** Server listening on port ${port} **************`
     );
