@@ -36,7 +36,7 @@ import { College } from '../colleges/models/college.model';
 })
 export class User extends Model<
   InferAttributes<User>,
-  InferCreationAttributes<User, { omit: 'college' }>
+  InferCreationAttributes<User, { omit: 'college' | 'fullName' }>
 > {
   @PrimaryKey
   @Column({ autoIncrement: true, type: DataType.BIGINT })
@@ -132,6 +132,14 @@ export class User extends Model<
   })
   declare deletedAt?: Date | null;
 */
+
+  @Column({ type: DataType.VIRTUAL })
+  get fullName() {
+    return [
+      ...(this.firstName ? [this.firstName] : []),
+      ...(this.lastName ? [this.lastName] : [])
+    ];
+  }
 
   @BelongsTo(() => College)
   declare college?: College;

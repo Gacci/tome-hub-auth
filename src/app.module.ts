@@ -23,15 +23,15 @@ import { UserModule } from './user/user.module';
   imports: [
     AuthModule,
     ConfigModule.forRoot({
-      envFilePath: [path.resolve(process.cwd(), '.env.development')],
+      envFilePath: [path.resolve(process.cwd(), '.env.dev')],
       ignoreEnvFile: false,
       isGlobal: true,
       load: [
         () =>
           dotenv.parse(
             fs.readFileSync(
-              process.env.NODE_ENV === 'development'
-                ? '.env.development'
+              process.env.NODE_ENV === 'dev'
+                ? '.env.dev'
                 : process.env.NODE_ENV === 'staging'
                   ? '.env.staging'
                   : '.env'

@@ -32,7 +32,7 @@ export class JwtAuthRefreshGuard
       .switchToHttp()
       .getRequest<Request & { user: JwtPayload }>();
 
-    console.log(request.cookies);
+    // console.log(request.cookies);
     if (request.user.type !== TokenType.REFRESH) {
       throw new UnauthorizedException(
         `Refresh token error: unexpected token type: ${request.user.type}`
@@ -49,12 +49,15 @@ export class JwtAuthRefreshGuard
   }
 
   handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any): JwtPayload {
-    console.log(
-      '\nJwtAuthRefresh\n',
-      '\nERROR: \n', err,
-      '\nJWT: \n', jwt,
-      '\nINFO\n', info
-    );
+    // console.log(
+    //   '\nJwtAuthRefresh\n',
+    //   '\nERROR: \n',
+    //   err,
+    //   '\nJWT: \n',
+    //   jwt,
+    //   '\nINFO\n',
+    //   info
+    // );
 
     if (err) {
       throw err;

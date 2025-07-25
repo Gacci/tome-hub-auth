@@ -19,7 +19,7 @@ COPY . .
 
 # Create the destination file based on the environment
 RUN if [ "$NODE_ENV" = "development" ]; then \
-      cp .env.development .env; \
+      cp .env.dev .env; \
     elif [ "$NODE_ENV" = "staging" ]; then \
       cp .env.staging .env; \
     fi
