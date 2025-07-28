@@ -6,6 +6,10 @@ services:
     depends_on:
       - auth-localstack
       - auth-redis
+    environment:
+      NODE_ENV: prod
+    env_file:
+      - .env
     ports:
       - '3000:3000'
     volumes:

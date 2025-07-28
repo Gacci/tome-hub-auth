@@ -17,9 +17,9 @@ import { ResponseInterceptor } from './common/interceptors/success-response/succ
 
 async function bootstrap() {
   dayjs.extend(utc);
-  const isProdEnv = process.env.NODE_ENV === 'prod';
-
   const logger = new Logger('main.ts');
+
+  const isProdEnv = process.env.NODE_ENV === 'prod';
   const app = await NestFactory.create(AppModule, {
     ...(isProdEnv
       ? {
@@ -65,8 +65,7 @@ async function bootstrap() {
 
   const port = process.env.PORT ? +process.env.PORT : 3000;
   try {
-    await app.listen(port, !isProdEnv ? 'localhost' : '0.0.0.0');
-
+    await app.listen(port, '0.0.0.0');
     logger.log(
       `************** Server listening on port ${port} **************`
     );

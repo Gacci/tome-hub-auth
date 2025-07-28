@@ -102,7 +102,8 @@ export class AppModule implements OnModuleInit {
     const dbHost = this.configService.get<string>('DB_HOST');
 
     console.log('--- Config Debugging ---');
-    console.log('NODE_ENV:', process.env.NODE_ENV); // Direct log of NODE_ENV
+    console.log(this.configService);
+    console.log('NODE_ENV:', process.env); // Direct log of NODE_ENV
     console.log('Environment variable NODE_ENV:', nodeEnv);
     console.log('DB_HOST:', dbHost);
   }

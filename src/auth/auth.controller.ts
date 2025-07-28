@@ -126,12 +126,11 @@ export class AuthController {
     );
 
     const options: CookieOptions = {
-      domain: 'localhost', // Explicit domain
-      httpOnly: true, // Recommended for production
+      httpOnly: true, // Prevent JS access
       maxAge: 15 * 60 * 1000, // 15 minutes
       path: '/',
-      sameSite: 'none', // Required for cross-origin
-      secure: true // Must be true for HTTPS
+      sameSite: isProdEnv ? 'none' : 'lax', // Allow cross-origin in prod
+      secure: isProdEnv // Use HTTPS in prod only
     };
 
     res.cookie(JWT_ACCESS_TOKEN_NAME, tokens?.jwtAccessToken, {

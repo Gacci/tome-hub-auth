@@ -11,17 +11,17 @@ export class RedisService {
   ) {}
 
   async setKey(key: string, value: string, ttl?: number): Promise<void> {
-    await this.redis.set(key, value);
+    await this.redis.set(`auth:${key}`, value);
     if (ttl) {
-      await this.redis.expire(key, ttl);
+      await this.redis.expire(`auth:${key}`, ttl);
     }
   }
 
   async getKey(key: string): Promise<string | null> {
-    return this.redis.get(key);
+    return this.redis.get(`auth:${key}`);
   }
 
   async deleteKey(key: string): Promise<void> {
-    await this.redis.del(key);
+    await this.redis.del(`auth:${key}`);
   }
 }

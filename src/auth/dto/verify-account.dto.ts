@@ -26,7 +26,6 @@ export class VerifyAccountDto {
     example: '123456',
     required: false
   })
-  @IsOptional()
   @IsString()
   @Length(6)
   @Matches(/^\d{6}$/)
