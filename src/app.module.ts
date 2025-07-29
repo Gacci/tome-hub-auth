@@ -45,7 +45,7 @@ import { UserModule } from './user/user.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         autoLoadModels: true,
-        database: configService.get<string>('DB_NAME'),
+        database: configService.get<string>('DB_AUTH'),
         dialect: 'mysql',
         host: configService.get<string>('DB_HOST'),
         password: configService.get<string>('DB_PASS'),

@@ -34,7 +34,7 @@ import {
   JWT_REFRESH_TOKEN_NAME
 } from '../config/constants';
 import { CheckUserAccessGuard } from '../guards/user-access/check-user-access.guard';
-// import { userProfileStorage } from '../common/storage/users-merchant-storage';
+// import { userProfileStorage } from '../common/data/users-merchant-data';
 import { AuthService } from './auth.service';
 import { CredentialsDto } from './dto/credentials.dto';
 import { EmailDto } from './dto/email.dto';
@@ -235,7 +235,7 @@ export class AuthController {
     status: HttpStatus.OK
   })
   @SuccessResponse('Successfully uploaded merchant image.')
-  @UseInterceptors(FileInterceptor('file')) // { storage: userProfileStorage }
+  @UseInterceptors(FileInterceptor('file')) // { data: userProfileStorage }
   async setProfilePicture(
     @Req() req: { user: JwtPayload },
     @UploadedFile(
