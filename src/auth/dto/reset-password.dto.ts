@@ -57,6 +57,6 @@ export class ResetPasswordDto {
   })
   @IsString()
   @IsNotEmpty()
-  @Length(32)
+  @Length(6)
   resetPasswordToken: string;
 }

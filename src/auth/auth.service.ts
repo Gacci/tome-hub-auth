@@ -313,7 +313,7 @@ export class AuthService {
       throw new BadRequestException('Password reset OTP is invalid.');
     }
 
-    const resetPasswordToken = this.generateRandomChars(32);
+    const resetPasswordToken = this.generateRandomChars(6);
     await user.update({ resetPasswordOtp: null, resetPasswordToken });
 
     return { resetPasswordToken };

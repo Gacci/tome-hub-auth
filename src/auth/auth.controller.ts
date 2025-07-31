@@ -331,16 +331,17 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response
   ) {
     const jwtAccessToken = await this.auth.exchangeAccessToken(req.user);
-    console.log(jwtAccessToken);
+    console.log('jwtAccessToken: ', jwtAccessToken, 'req.user: ', req.user);
     const isProdEnv = ['prod', 'production'].includes(
       this.config.get<string>('NODE_ENV', '')
     );
 
     res.cookie(JWT_ACCESS_TOKEN_NAME, jwtAccessToken, {
-      httpOnly: false, //isProdEnv,
+      httpOnly: true, //isProdEnv,
       maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES'),
-      sameSite: 'lax', //'none',
-      secure: false //isProdEnv
+      path: '/',
+      sameSite: isProdEnv ? 'none' : 'lax', // Allow cross-origin in prod
+      secure: isProdEnv // Use HTTPS in prod only
     });
 
     return { [JWT_ACCESS_TOKEN_NAME]: jwtAccessToken };
