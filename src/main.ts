@@ -59,9 +59,11 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
     maxAge: 86400,
     methods: ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'],
-    origin: [clientUrl, 'http://localhost:4200', 'https://localhost:4200'].filter(
-      Boolean
-    )
+    origin: [
+      clientUrl,
+      'http://localhost:4200',
+      'https://localhost:4200'
+    ].filter(Boolean)
   });
 
   try {
@@ -74,4 +76,3 @@ async function bootstrap() {
   }
 }
 void bootstrap();
-

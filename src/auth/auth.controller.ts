@@ -126,7 +126,7 @@ export class AuthController {
     );
 
     const options: CookieOptions = {
-      httpOnly: true, // Prevent JS access
+      httpOnly: false, // Prevent JS access
       maxAge: 15 * 60 * 1000, // 15 minutes
       path: '/',
       sameSite: isProdEnv ? 'none' : 'lax', // Allow cross-origin in prod
@@ -162,17 +162,18 @@ export class AuthController {
     console.log(
       '**************************  LOG OUT ************************** '
     );
-    // const isProdEnv = ['prod', 'production'].includes(
-    //   this.config.get<string>('NODE_ENV', '')
-    // );
+    const isProdEnv = ['prod', 'production'].includes(
+      this.config.get<string>('NODE_ENV', '')
+    );
     await this.auth.revokeRefreshToken(req.user);
 
     const options: CookieOptions = {
+      httpOnly: isProdEnv, //isProdEnv,
+      maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES'),
       domain: 'localhost', // Same domain as when setting the cookie
-      httpOnly: true, // Same httpOnly flag as when setting the cookie
-      path: '/', // Same path as when setting the cookie
-      sameSite: 'none', // Same sameSite setting as when setting the cookie
-      secure: true // Must match the secure flag used when setting the cookie
+      path: '/',
+      sameSite: isProdEnv ? 'none' : 'lax', // Allow cross-origin in prod
+      secure: isProdEnv // Use HTTPS in prod only
     };
 
     // Clear both access and refresh token cookies
@@ -337,7 +338,7 @@ export class AuthController {
     );
 
     res.cookie(JWT_ACCESS_TOKEN_NAME, jwtAccessToken, {
-      httpOnly: true, //isProdEnv,
+      httpOnly: isProdEnv, //isProdEnv,
       maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES'),
       path: '/',
       sameSite: isProdEnv ? 'none' : 'lax', // Allow cross-origin in prod

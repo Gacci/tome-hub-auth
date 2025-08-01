@@ -35,36 +35,43 @@ export class JwtAuthAccessGuard
     console.log('auth.AuthGuard', request.cookies);
     if (request.user.type !== TokenType.ACCESS) {
       throw new UnauthorizedException(
-        `Unexpected token type: ${request.user.type}`
+        `AccessTokenMismatch: Unexpected token type: ${request.user.type}`
       );
     }
 
     if (
       await this.redis.getKey(request.cookies[JWT_ACCESS_TOKEN_NAME] as string)
     ) {
-      throw new UnauthorizedException('Revoked token.');
+      throw new UnauthorizedException(
+        'AccessTokenRevoked: access token has been revoked.'
+      );
     }
 
     return true;
   }
 
   // Optionally override handleRequest to customize error handling
-  // handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any) {
-  //   console.log(
-  //     '\nJwtAuthAccess\n',
-  //     '\nERROR: \n', err,
-  //     '\nJWT: \n', jwt,
-  //     '\nINFO\n', info
-  //   );
-  //
-  //   if (err) {
-  //     throw err;
-  //   }
-  //
-  //   if (!jwt) {
-  //     throw new UnauthorizedException('NoAuthToken: Auth token missing.');
-  //   }
-  //
-  //   return jwt;
-  // }
+  handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any) {
+    console.log(
+      '\nJwtAuthAccess\n',
+      '\nERROR: \n',
+      err,
+      '\nJWT: \n',
+      jwt,
+      '\nINFO\n',
+      info
+    );
+
+    if (err) {
+      throw err;
+    }
+
+    if (!jwt) {
+      throw new UnauthorizedException(
+        'AccessTokenMissing: authorization token missing.'
+      );
+    }
+
+    return jwt;
+  }
 }
