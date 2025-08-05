@@ -20,7 +20,7 @@ export class ProfileImageUrlInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((user: ProfileDto) => ({
         ...user,
-        ...(user.profilePictureUrl
+        ...(user?.profilePictureUrl
           ? { profilePictureUrl: this.getImageUrl(user.profilePictureUrl) }
           : {})
       }))

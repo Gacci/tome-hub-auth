@@ -52,14 +52,18 @@ export class AuthService {
   ) {}
   async register(email: string, password: string): Promise<void> {
     if (!(await this.collegesService.emailDomainExists(email))) {
-      throw new BadRequestException(
-        'EmailError: email is not valid, an academic email required.'
-      );
+      throw new BadRequestException({
+        error: 'EmailError',
+        message: 'Email is not valid, an academic email required'
+      });
     }
 
     const existing = await this.findByEmail(email);
     if (existing) {
-      throw new ConflictException('UserError: user already exists.');
+      throw new ConflictException({
+        error: 'UserError',
+        message: 'User already exists'
+      });
     }
 
     const verifyAccountOtp = this.generateOtp(6);
@@ -80,16 +84,20 @@ export class AuthService {
     });
   }
 
-  async sendRegisterOtp(email: string): Promise<void> {
+  async sendRegisterOtp(email: string) {
     const user = await this.findByEmail(email);
     if (!user) {
-      throw new NotFoundException('UserError: user could not be found.');
+      throw new NotFoundException({
+        error: 'UserError',
+        message: 'User could not be located'
+      });
     }
 
     if (user.isAccountVerified) {
-      throw new BadRequestException(
-        'AccountError: user has already been verified.'
-      );
+      throw new ConflictException({
+        error: 'UserVerified',
+        message: 'Account had already been verified'
+      });
     }
 
     const verifyAccountOtp = this.generateOtp(6);
@@ -99,38 +107,46 @@ export class AuthService {
 
   async verifyAccount(payload: VerifyAccountDto) {
     if (!(await this.collegesService.emailDomainExists(payload.email))) {
-      throw new BadRequestException(
-        'EmailError: email is not valid, an academic email required.'
-      );
+      throw new BadRequestException({
+        error: 'EmailError',
+        message: 'Email is not valid, an academic email required'
+      });
     }
 
     const user = await this.findByEmail(payload.email);
     if (!user) {
-      throw new NotFoundException('UserError: user could not be found.');
+      throw new NotFoundException({
+        error: 'UserError',
+        message: 'User could not be located'
+      });
     }
 
     if (user.isAccountVerified) {
-      throw new BadRequestException(
-        'AccountError: account has already been verified.'
-      );
+      throw new ConflictException({
+        error: 'UserVerified',
+        message: 'Account had already been verified'
+      });
     }
 
     if (!user.verifyAccountOtp || !user.verifyAccountOtpIssuedAt) {
-      throw new UnauthorizedException(
-        'OTPError: account verification OTP has not been issued.'
-      );
+      throw new UnauthorizedException({
+        error: 'OTPError',
+        message: 'Account verification OTP has not been issued'
+      });
     }
 
     if (this.isOtpExpired(user.verifyAccountOtpIssuedAt)) {
-      throw new BadRequestException(
-        'OTPError: account verification OTP has expired.'
-      );
+      throw new BadRequestException({
+        error: 'OTPError',
+        message: 'Account verification OTP has expired'
+      });
     }
 
     if (user.verifyAccountOtp !== payload.verifyAccountOtp) {
-      throw new UnauthorizedException(
-        'OTPError: account verification OTP is invalid.'
-      );
+      throw new UnauthorizedException({
+        error: 'OTPError',
+        message: 'Account verification OTP is invalid'
+      });
     }
 
     const updated = await user.update({
@@ -148,22 +164,27 @@ export class AuthService {
 
   async login(credentials: LoginAuthDto): Promise<JwtTokens | null> {
     if (!(await this.collegesService.emailDomainExists(credentials.email))) {
-      throw new BadRequestException(
-        'EmailError: email is not valid, an academic email required.'
-      );
+      throw new BadRequestException({
+        error: 'EmailError',
+        message: 'Email is not valid, an academic email is required'
+      });
     }
 
     const user = await this.users.findOneWithPassword({
       email: credentials.email
     });
     if (!user) {
-      throw new NotFoundException('UserError: user could not be found.');
+      throw new NotFoundException({
+        error: 'UserError',
+        message: 'User could not be located'
+      });
     }
 
     if (!(await user.isSamePassword(credentials.password))) {
-      throw new BadRequestException(
-        'CredentialsError: either password or username is incorrect.'
-      );
+      throw new BadRequestException({
+        error: 'CredentialsError',
+        message: 'Either password or username is incorrect'
+      });
     }
 
     if (user.is2faEnabled) {
@@ -172,23 +193,31 @@ export class AuthService {
         await this.mailer.sendLoginOtp(user.email, loginOtp);
         await user.update({ loginOtp });
 
-        throw new ForbiddenException('OTPError: login OTP is required.');
+        throw new ForbiddenException({
+          error: 'OTPError',
+          message: 'Login OTP is required'
+        });
       }
 
       if (!user.loginOtp || !user.loginOtpIssuedAt) {
-        throw new BadRequestException(
-          'OTPError: login OTP has not been issued.'
-        );
+        throw new BadRequestException({
+          error: 'OTPError',
+          message: 'Login OTP has not been issued.'
+        });
       }
 
       if (this.isOtpExpired(user.loginOtpIssuedAt)) {
-        throw new BadRequestException(
-          'OTPError: login OTP has expired. Please request a new one.'
-        );
+        throw new BadRequestException({
+          error: 'OTPError',
+          message: 'Login OTP has expired. Please request a new one.'
+        });
       }
 
       if (user.loginOtp !== credentials.loginOtp) {
-        throw new UnauthorizedException('OTPError: login OTP is invalid.');
+        throw new UnauthorizedException({
+          error: 'OTPError',
+          message: 'Login OTP is invalid'
+        });
       }
 
       await user.update({ loginOtp: null });
@@ -204,19 +233,24 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException('UserError: user could not be found.');
+      throw new NotFoundException({
+        error: 'UserError',
+        message: 'User could not be located'
+      });
     }
 
     if (!(await user.isSamePassword(credentials.password))) {
-      throw new BadRequestException(
-        'CredentialsError: either password or username is incorrect.'
-      );
+      throw new BadRequestException({
+        error: 'CredentialsError',
+        message: 'Either password or username is incorrect'
+      });
     }
 
     if (!user.is2faEnabled) {
-      throw new BadRequestException(
-        'UserError: user does not have 2FA enabled.'
-      );
+      throw new BadRequestException({
+        error: 'UserError',
+        message: 'User does not have 2FA enabled'
+      });
     }
 
     const loginOtp = this.generateOtp(6);
@@ -227,7 +261,10 @@ export class AuthService {
   async update(userId: number, update: UpdateAuthDto) {
     const existing = await this.users.findByPk(userId);
     if (!existing) {
-      throw new NotFoundException('UserError: user could not be found.');
+      throw new NotFoundException({
+        error: 'UserError',
+        message: 'User could not be located'
+      });
     }
 
     const user = await existing.update(update);
@@ -256,7 +293,10 @@ export class AuthService {
   async remove(userId: number) {
     const user = await this.users.findByPk(userId);
     if (!user) {
-      throw new NotFoundException('UserError: user could not be found.');
+      throw new NotFoundException({
+        error: 'UserError',
+        message: 'User could not be located'
+      });
     }
 
     const { deletedAt } = await user.update({ deletedAt: dayjs().utc() });
@@ -282,14 +322,18 @@ export class AuthService {
 
   async sendResetPasswordOtp(email: string): Promise<void> {
     if (!(await this.collegesService.emailDomainExists(email))) {
-      throw new BadRequestException(
-        'CredentialsError: either password or username is incorrect.'
-      );
+      throw new BadRequestException({
+        error: 'CredentialsError',
+        message: 'Either password or username is incorrect'
+      });
     }
 
     const user = await this.findByEmail(email);
     if (!user) {
-      throw new NotFoundException('UserError: user could not be found.');
+      throw new NotFoundException({
+        error: 'UserError',
+        message: 'User could not be located'
+      });
     }
 
     const resetPasswordOtp = this.generateOtp(6);
@@ -303,32 +347,39 @@ export class AuthService {
 
   async verifyResetPasswordOtp(email: string, resetPasswordOtp: string) {
     if (!(await this.collegesService.emailDomainExists(email))) {
-      throw new BadRequestException(
-        'CredentialsError: either password or username is incorrect.'
-      );
+      throw new BadRequestException({
+        error: 'CredentialsError',
+        message: 'Either password or username is incorrect'
+      });
     }
 
     const user = await this.findByEmail(email);
     if (!user) {
-      throw new NotFoundException('UserError: user could not be found.');
+      throw new NotFoundException({
+        error: 'UserError',
+        message: 'User could not be located'
+      });
     }
 
     if (!user.resetPasswordOtp || !user.resetPasswordOtpIssuedAt) {
-      throw new BadRequestException(
-        'PasswordError: password reset OTP has not been issued.'
-      );
+      throw new BadRequestException({
+        error: 'PasswordError',
+        message: 'Password reset OTP has not been issued'
+      });
     }
 
     if (this.isOtpExpired(user.resetPasswordOtpIssuedAt)) {
-      throw new ForbiddenException(
-        'PasswordError: password reset OTP is expired or invalid.'
-      );
+      throw new ForbiddenException({
+        error: 'PasswordError',
+        message: 'Password reset OTP is expired or invalid'
+      });
     }
 
     if (user.resetPasswordOtp !== resetPasswordOtp) {
-      throw new BadRequestException(
-        'PasswordError: password reset OTP is invalid.'
-      );
+      throw new BadRequestException({
+        error: 'PasswordError',
+        message: 'Password reset OTP is invalid'
+      });
     }
 
     const resetPasswordToken = this.generateRandomChars(6);
@@ -340,31 +391,38 @@ export class AuthService {
   async resetPassword(update: ResetPasswordDto): Promise<void> {
     const user = await this.users.findOneWithPassword({ email: update.email });
     if (!user) {
-      throw new NotFoundException('UserError: user could not be found.');
+      throw new NotFoundException({
+        error: 'UserError',
+        message: 'User could not be located'
+      });
     }
 
     if (user.resetPasswordToken !== update.resetPasswordToken) {
-      throw new UnauthorizedException(
-        'PasswordError: password reset OTP is invalid.'
-      );
+      throw new UnauthorizedException({
+        error: 'PasswordError',
+        message: 'Password reset OTP is invalid'
+      });
     }
 
     if (!user.resetPasswordTokenIssuedAt) {
-      throw new BadRequestException(
-        'PasswordError: password reset OTP has not been issued.'
-      );
+      throw new BadRequestException({
+        error: 'PasswordError',
+        message: 'Password reset OTP has not been issued'
+      });
     }
 
     if (this.isOtpExpired(user.resetPasswordTokenIssuedAt)) {
-      throw new ForbiddenException(
-        'PasswordError: password reset OTP has expired.'
-      );
+      throw new ForbiddenException({
+        error: 'PasswordError',
+        message: 'Password reset OTP has expired'
+      });
     }
 
     if (await user.isSamePassword(update.newPassword)) {
-      throw new BadRequestException(
-        'PasswordError: password reuse is not allowed.'
-      );
+      throw new BadRequestException({
+        error: 'PasswordError',
+        message: 'Password reuse is not allowed'
+      });
     }
 
     await this.mailer.notifyPasswordChanged(user.email);
@@ -378,13 +436,17 @@ export class AuthService {
   async updatePassword(userId: number, password: string) {
     const user = await this.users.findOneWithPassword({ userId });
     if (!user) {
-      throw new NotFoundException('UserError: user could not be found.');
+      throw new NotFoundException({
+        error: 'UserError',
+        message: 'User could not be located'
+      });
     }
 
     if (await user.isSamePassword(password)) {
-      throw new BadRequestException(
-        'PasswordError: password reuse is not allowed.'
-      );
+      throw new BadRequestException({
+        error: 'PasswordError',
+        message: 'Password reuse is not allowed'
+      });
     }
 
     await user.update({ password });
@@ -393,9 +455,10 @@ export class AuthService {
 
   async revokeRefreshToken(decodedRefreshToken: JwtPayload): Promise<void> {
     if (TokenType.REFRESH !== decodedRefreshToken.type) {
-      throw new UnauthorizedException(
-        `TokenError: Invalid token of type '${decodedRefreshToken.type}'`
-      );
+      throw new UnauthorizedException({
+        error: 'TokenError',
+        message: `Invalid token of type '${decodedRefreshToken.type}'`
+      });
     }
 
     const sessions = await this.sessions.findAll({
@@ -442,14 +505,18 @@ export class AuthService {
 
   async exchangeAccessToken(decodedRefreshToken: JwtPayload) {
     if (TokenType.REFRESH !== decodedRefreshToken.type) {
-      throw new UnauthorizedException(
-        `TokenError: expects token of type '${decodedRefreshToken.type}'`
-      );
+      throw new UnauthorizedException({
+        error: 'TokenError',
+        message: `Expects token of type '${decodedRefreshToken.type}'`
+      });
     }
 
     const user = await this.users.findByPk(decodedRefreshToken.sub);
     if (!user) {
-      throw new BadRequestException('UserError: account is no longer active.');
+      throw new BadRequestException({
+        error: 'UserError',
+        message: 'Account is no longer active'
+      });
     }
 
     await this.deactivateAccessToken(
@@ -457,12 +524,13 @@ export class AuthService {
       TokenStatus.EXCHANGED
     );
 
+    console.log('exchangeAccessToken', user);
     const jwtAccessToken = this.createAccessToken({
       mbr: user.membership,
       mex: user.membershipExpiresAt?.getTime(),
       ref: decodedRefreshToken.ref,
-      scope: decodedRefreshToken.scope,
-      sub: decodedRefreshToken.sub,
+      scope: user.collegeId,
+      sub: user.userId,
       verified: user.isAccountVerified
     });
 
@@ -471,7 +539,7 @@ export class AuthService {
       status: TokenStatus.ACTIVE,
       token: jwtAccessToken,
       type: TokenType.ACCESS,
-      userId: +decodedRefreshToken.sub
+      userId: user.userId
     });
 
     return jwtAccessToken;

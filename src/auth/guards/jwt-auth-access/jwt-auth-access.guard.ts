@@ -6,12 +6,15 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import { Request } from 'express';
+import { TokenType } from '@/auth/models/session-token.model';
+import { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
+import {
+  JWT_ACCESS_TOKEN_NAME,
+  JWT_REFRESH_TOKEN_NAME
+} from '@/config/constants';
+import { RedisService } from '@/redis/redis.service';
 
-import { JwtPayload } from '../../../common/interfaces/jwt-payload.interface';
-import { JWT_ACCESS_TOKEN_NAME } from '../../../config/constants';
-import { RedisService } from '../../../redis/redis.service';
-import { TokenType } from '../../models/session-token.model';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtAuthAccessGuard
@@ -23,55 +26,74 @@ export class JwtAuthAccessGuard
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user: JwtPayload }>();
+
+    const accessAuthToken: string | null =
+      request.cookies?.[JWT_ACCESS_TOKEN_NAME];
+    const refreshAuthToken: string | null =
+      request.cookies?.[JWT_REFRESH_TOKEN_NAME];
+
+    if (!accessAuthToken && !refreshAuthToken) {
+      throw new UnauthorizedException({
+        error: 'SessionExpired',
+        message: 'Session has expired. Please login.'
+      });
+    }
+
+    if (!accessAuthToken) {
+      throw new UnauthorizedException({
+        error: 'AccessTokenExpired',
+        message: 'Access token has expired.'
+      });
+    }
+
     // First, ensure the JWT is valid. If authentication failed, result will be false
     if (!(await super.canActivate(context))) {
       return false;
     }
 
-    const request = context
-      .switchToHttp()
-      .getRequest<Request & { user: JwtPayload }>();
-
-    console.log('auth.AuthGuard', request.cookies);
+    console.log('JwtAuthAccessGuard.canActivate', request.cookies);
     if (request.user.type !== TokenType.ACCESS) {
-      throw new UnauthorizedException(
-        `AccessTokenMismatch: Unexpected token type: ${request.user.type}`
-      );
+      throw new UnauthorizedException({
+        error: 'TokenMismatch',
+        message: `Unexpected token type: ${request.user.type}`
+      });
     }
 
-    if (
-      await this.redis.getKey(request.cookies[JWT_ACCESS_TOKEN_NAME] as string)
-    ) {
-      throw new UnauthorizedException(
-        'AccessTokenRevoked: access token has been revoked.'
-      );
+    if (await this.redis.getKey(accessAuthToken)) {
+      throw new UnauthorizedException({
+        error: 'AccessTokenRevoked',
+        message: 'Access token has been revoked.'
+      });
     }
 
     return true;
   }
 
   // Optionally override handleRequest to customize error handling
-  handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any) {
-    console.log(
-      '\nJwtAuthAccess\n',
-      '\nERROR: \n',
-      err,
-      '\nJWT: \n',
-      jwt,
-      '\nINFO\n',
-      info
-    );
-
-    if (err) {
-      throw err;
-    }
-
-    if (!jwt) {
-      throw new UnauthorizedException(
-        'AccessTokenMissing: authorization token missing.'
-      );
-    }
-
-    return jwt;
-  }
+  // handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any) {
+  //   console.log(
+  //     '\nJwtAuthAccessGuard.handleRequest\n',
+  //     '\nERROR: \n',
+  //     err,
+  //     '\nJWT: \n',
+  //     jwt,
+  //     '\nINFO\n',
+  //     info
+  //   );
+  //
+  //   if (err) {
+  //     throw err;
+  //   }
+  //
+  //   if (!jwt) {
+  //     throw new UnauthorizedException(
+  //       'AccessTokenMissing: authorization token missing.'
+  //     );
+  //   }
+  //
+  //   return jwt;
+  // }
 }

@@ -33,7 +33,6 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   const clientUrl = configService.get<string>('CLIENT_URL');
-  const port = configService.get<number>('AUTH_PORT', 3000);
 
   const config = new DocumentBuilder()
     .setTitle('API Documentation')
@@ -44,6 +43,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
+  app.setGlobalPrefix('v1/auth');
   app.use(cookieParser());
   app.useGlobalPipes(
     new ValidationPipe({
@@ -67,6 +67,7 @@ async function bootstrap() {
   });
 
   try {
+    const port = configService.get<number>('AUTH_PORT', 3000);
     await app.listen(port, '0.0.0.0');
     logger.log(
       `************** Server listening on port ${port} **************`

@@ -23,54 +23,63 @@ export class JwtAuthRefreshGuard
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context
+      .switchToHttp()
+      .getRequest<Request & { user: JwtPayload }>();
+
+    if (!request.cookies?.[JWT_REFRESH_TOKEN_NAME]) {
+      throw new UnauthorizedException({
+        error: 'SessionExpired',
+        message: 'Session has expired. Please login.'
+      });
+    }
+
     // First, ensure the JWT is valid. If authentication failed, result will be false
     if (!(await super.canActivate(context))) {
       return false;
     }
 
-    const request = context
-      .switchToHttp()
-      .getRequest<Request & { user: JwtPayload }>();
-
     console.log('canActivate: ', request.cookies);
     if (request.user.type !== TokenType.REFRESH) {
-      throw new UnauthorizedException(
-        `RefreshTokenMismatch: unexpected token type: ${request.user.type}.`
-      );
+      throw new UnauthorizedException({
+        error: 'TokenMismatch',
+        message: `unexpected token type: ${request.user.type}.`
+      });
     }
 
     if (
       await this.redis.getKey(request.cookies[JWT_REFRESH_TOKEN_NAME] as string)
     ) {
-      throw new UnauthorizedException(
-        'RefreshTokenRevoked: revoked refresh token.'
-      );
+      throw new UnauthorizedException({
+        error: 'TokenRevoked',
+        message: 'Refresh token has been revoked.'
+      });
     }
 
     return true;
   }
 
-  handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any): JwtPayload {
-    // console.log(
-    //   '\nJwtAuthRefresh\n',
-    //   '\nERROR: \n',
-    //   err,
-    //   '\nJWT: \n',
-    //   jwt,
-    //   '\nINFO\n',
-    //   info
-    // );
-
-    if (err) {
-      throw err;
-    }
-
-    if (!jwt) {
-      throw new UnauthorizedException(
-        'RefreshTokenMissing: auth token is missing.'
-      );
-    }
-
-    return jwt;
-  }
+  // handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any): JwtPayload {
+  //   // console.log(
+  //   //   '\nJwtAuthRefresh\n',
+  //   //   '\nERROR: \n',
+  //   //   err,
+  //   //   '\nJWT: \n',
+  //   //   jwt,
+  //   //   '\nINFO\n',
+  //   //   info
+  //   // );
+  //
+  //   if (err) {
+  //     throw err;
+  //   }
+  //
+  //   if (!jwt) {
+  //     throw new UnauthorizedException(
+  //       'RefreshTokenMissing: auth token is missing.'
+  //     );
+  //   }
+  //
+  //   return jwt;
+  // }
 }

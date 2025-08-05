@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -48,9 +47,10 @@ import { UpdateAuthDto } from './dto/update-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
 import { JwtAuthAccessGuard } from './guards/jwt-auth-access/jwt-auth-access.guard';
 import { JwtAuthRefreshGuard } from './guards/jwt-auth-refresh/jwt-auth-refresh.guard';
+import { AccountVerifiedGuard } from './guards/account-verified/account-verified.guard';
 
 @ApiTags('Auth')
-@Controller('auth')
+@Controller()
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
@@ -70,7 +70,7 @@ export class AuthController {
 
   @HttpCode(HttpStatus.OK)
   @Post('account/register/otp/resend')
-  @UseGuards(JwtAuthAccessGuard)
+  @UseGuards(JwtAuthAccessGuard, AccountVerifiedGuard)
   @ApiResponse({
     description: 'Emails an OTP for users to confirm registration.',
     status: HttpStatus.OK
@@ -82,16 +82,12 @@ export class AuthController {
     @Req() req: { user: JwtPayload },
     @Body() body: EmailDto
   ) {
-    if (req.user.verified) {
-      throw new BadRequestException('Account is already verified.');
-    }
-
     await this.auth.sendRegisterOtp(body.email);
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('account/verify')
-  @UseGuards(JwtAuthAccessGuard)
+  @UseGuards(JwtAuthAccessGuard, AccountVerifiedGuard)
   @ApiResponse({
     description: 'Verifies OTP for users to confirm registration.',
     status: HttpStatus.OK
@@ -101,10 +97,6 @@ export class AuthController {
     @Req() req: { user: JwtPayload },
     @Body() body: VerifyAccountDto
   ) {
-    if (req.user.verified) {
-      throw new BadRequestException('Account is already verified.');
-    }
-
     await this.auth.verifyAccount(body);
   }
 
