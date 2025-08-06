@@ -27,7 +27,10 @@ export class JwtAuthRefreshGuard
       .switchToHttp()
       .getRequest<Request & { user: JwtPayload }>();
 
-    if (!request.cookies?.[JWT_REFRESH_TOKEN_NAME]) {
+    const refreshAuthToken: string | null =
+      request.cookies?.[JWT_REFRESH_TOKEN_NAME];
+
+    if (!refreshAuthToken) {
       throw new UnauthorizedException({
         error: 'SessionExpired',
         message: 'Session has expired. Please login.'
@@ -47,9 +50,7 @@ export class JwtAuthRefreshGuard
       });
     }
 
-    if (
-      await this.redis.getKey(request.cookies[JWT_REFRESH_TOKEN_NAME] as string)
-    ) {
+    if (await this.redis.getKey(refreshAuthToken)) {
       throw new UnauthorizedException({
         error: 'TokenRevoked',
         message: 'Refresh token has been revoked.'
