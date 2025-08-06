@@ -63,7 +63,7 @@ export class AuthController {
     description: 'Registers a new users',
     status: HttpStatus.CREATED
   })
-  @SuccessResponse('Successfully created account.')
+  @SuccessResponse('You account has successfully been created')
   async create(@Body() createAuthDto: RegisterAuthDto) {
     await this.auth.register(createAuthDto.email, createAuthDto.password);
   }
@@ -76,7 +76,7 @@ export class AuthController {
     status: HttpStatus.OK
   })
   @SuccessResponse(
-    'You will receive an OTP if we are able to match you in our records.'
+    'You will shortly receive an OTP if we are able to match you in our records'
   )
   async sendRegisterOtp(
     @Req() req: { user: JwtPayload },
@@ -92,7 +92,7 @@ export class AuthController {
     description: 'Verifies OTP for users to confirm registration.',
     status: HttpStatus.OK
   })
-  @SuccessResponse('You account has been successfully verified.')
+  @SuccessResponse('You account has been successfully verified')
   async verifyAccount(
     @Req() req: { user: JwtPayload },
     @Body() body: VerifyAccountDto
@@ -107,7 +107,7 @@ export class AuthController {
       'Grants access to users (requires OTP if users is enrolled in 2FA authentication).',
     status: HttpStatus.OK
   })
-  // @SuccessResponse('Login successful.')
+  @SuccessResponse('You have successfully logged in')
   async login(
     @Res({ passthrough: true }) res: Response,
     @Body() loginAuthDto: LoginAuthDto
@@ -146,7 +146,7 @@ export class AuthController {
     description: 'Logs out authenticated users.',
     status: HttpStatus.OK
   })
-  @SuccessResponse('Logged out successfully')
+  @SuccessResponse('You have successfully logged out')
   async logout(
     @Req() req: { user: JwtPayload },
     @Res({ passthrough: true }) res: Response
@@ -175,7 +175,7 @@ export class AuthController {
 
   @Post('account/login/otp/resend')
   @ApiResponse({ description: 'Sends login OTP.', status: HttpStatus.OK })
-  @SuccessResponse('Check your inbox for your OTP.')
+  @SuccessResponse('We have initiated a message to send an OTP to your email')
   async resendLoginOtp(@Body() body: CredentialsDto) {
     return this.auth.sendLoginOtp(body);
   }
@@ -187,7 +187,6 @@ export class AuthController {
     description: "Reads authenticated users's merchant.",
     status: HttpStatus.OK
   })
-  // @SuccessResponse('Success')
   async findOne(@Req() req: { user: JwtPayload }) {
     return ProfileDto.from(await this.auth.findProfile(+req.user.sub));
   }
@@ -199,7 +198,7 @@ export class AuthController {
     description: 'Updates authenticated users.',
     status: HttpStatus.OK
   })
-  // @SuccessResponse('Success')
+  @SuccessResponse('Your account has been successfully updated')
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: { user: JwtPayload },
@@ -215,7 +214,7 @@ export class AuthController {
     description: 'Deletes account for authenticated users.',
     status: HttpStatus.OK
   })
-  @SuccessResponse('Account deleted successfully.')
+  @SuccessResponse('Your account has been successfully deleted')
   async remove(@Req() req: { user: JwtPayload }) {
     await this.auth.remove(+req.user.sub);
   }
@@ -224,10 +223,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthAccessGuard)
   @ApiResponse({
-    description: 'Updates merchant image for authenticated users.',
+    description: 'Updates image for authenticated users.',
     status: HttpStatus.OK
   })
-  @SuccessResponse('Successfully uploaded merchant image.')
+  @SuccessResponse('Your image has been successfully uploaded')
   @UseInterceptors(FileInterceptor('file')) // { data: userProfileStorage }
   async setProfilePicture(
     @Req() req: { user: JwtPayload },
@@ -262,7 +261,7 @@ export class AuthController {
     description: 'Sends password reset OTP.',
     status: HttpStatus.OK
   })
-  @SuccessResponse('Check your inbox for your OTP.')
+  @SuccessResponse('We have initiated a message to send an OTP to your email')
   async sendPasswordOtp(@Body() body: EmailDto) {
     await this.auth.sendResetPasswordOtp(body.email);
   }
@@ -282,7 +281,7 @@ export class AuthController {
     description: 'Resets password for users providing OTP.',
     status: HttpStatus.OK
   })
-  @SuccessResponse('You password has been reset successfully.')
+  @SuccessResponse('You password has been successfully reset')
   async resetPassword(@Body() body: ResetPasswordDto) {
     await this.auth.resetPassword(body);
   }
@@ -294,7 +293,7 @@ export class AuthController {
     description: 'Changes password for users specified by `id`.',
     status: HttpStatus.OK
   })
-  @SuccessResponse('You password has been successfully changed.')
+  @SuccessResponse('You password has been successfully changed')
   async updatePassword(
     @Req() req: { user: JwtPayload },
     @Body() body: { newPassword: string }
@@ -318,7 +317,7 @@ export class AuthController {
     description: 'Refreshes access token.',
     status: HttpStatus.OK
   })
-  // @SuccessResponse('Access token has been successfully refreshed.')
+  @SuccessResponse('Access token has been successfully refreshed')
   async refreshAccessToken(
     @Req() req: { user: JwtPayload },
     @Res({ passthrough: true }) res: Response
@@ -344,7 +343,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthRefreshGuard)
   @ApiResponse({ description: 'Revokes refresh token.', status: HttpStatus.OK })
-  @SuccessResponse('Refresh token has been successfully revoked.')
+  @SuccessResponse('Refresh token has been successfully revoked')
   async revokeRefreshTokens(@Req() req: { user: JwtPayload }) {
     await this.auth.revokeRefreshToken(req.user);
   }
