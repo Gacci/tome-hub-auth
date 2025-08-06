@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  Inject,
   Injectable,
   UnauthorizedException
 } from '@nestjs/common';
@@ -18,7 +19,7 @@ export class JwtAuthRefreshGuard
   extends AuthGuard('jwt-refresh')
   implements CanActivate
 {
-  constructor(private readonly redis: RedisService) {
+  constructor(@Inject('REDIS_AUTH_REFRESH_REVOKED') private readonly redis: RedisService) {
     super();
   }
 
@@ -59,28 +60,4 @@ export class JwtAuthRefreshGuard
 
     return true;
   }
-
-  // handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any): JwtPayload {
-  //   // console.log(
-  //   //   '\nJwtAuthRefresh\n',
-  //   //   '\nERROR: \n',
-  //   //   err,
-  //   //   '\nJWT: \n',
-  //   //   jwt,
-  //   //   '\nINFO\n',
-  //   //   info
-  //   // );
-  //
-  //   if (err) {
-  //     throw err;
-  //   }
-  //
-  //   if (!jwt) {
-  //     throw new UnauthorizedException(
-  //       'RefreshTokenMissing: auth token is missing.'
-  //     );
-  //   }
-  //
-  //   return jwt;
-  // }
 }

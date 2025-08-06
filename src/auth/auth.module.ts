@@ -40,8 +40,7 @@ import { SessionToken } from './models/session-token.model';
     AwsConfigService,
     AuthService,
     CheckUserAccessGuard,
-    CollegesService,
-    RedisService
+    CollegesService
   ]
 })
 export class AuthModule {}

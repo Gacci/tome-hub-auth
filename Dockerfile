@@ -1,7 +1,7 @@
 # Step 1: Build the app
 FROM node:22 AS builder
 
-ARG NODE_ENV=development
+ARG NODE_ENV=dev
 
 # Set working directory inside container
 WORKDIR /app

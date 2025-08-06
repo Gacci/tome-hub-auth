@@ -1,27 +1,26 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import {Inject, Injectable } from '@nestjs/common';
 
 import Redis from 'ioredis';
 
 @Injectable()
 export class RedisService {
   constructor(
-    @Inject('REDIS') private readonly redis: Redis,
-    private readonly configService: ConfigService
+    @Inject('REDIS_CLIENT') private readonly client: Redis,
+    @Inject('REDIS_PREFIX') private readonly prefix: string
   ) {}
 
   async setKey(key: string, value: string, ttl?: number): Promise<void> {
-    await this.redis.set(`auth:${key}`, value);
+    await this.client.set(`${this.prefix}:${key}`, value);
     if (ttl) {
-      await this.redis.expire(`auth:${key}`, ttl);
+      await this.client.expire(`${this.prefix}:${key}`, ttl);
     }
   }
 
   async getKey(key: string): Promise<string | null> {
-    return this.redis.get(`auth:${key}`);
+    return this.client.get(`${this.prefix}:${key}`);
   }
 
   async deleteKey(key: string): Promise<void> {
-    await this.redis.del(`auth:${key}`);
+    await this.client.del(`${this.prefix}:${key}`);
   }
 }

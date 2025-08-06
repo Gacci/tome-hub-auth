@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException
@@ -46,7 +47,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly mailer: MailerService,
     private readonly rabbitMQService: RabbitMQService,
-    private readonly redis: RedisService,
+    @Inject('REDIS_AUTH_REFRESH_REVOKED') private readonly redis: RedisService,
     @InjectModel(SessionToken) private readonly sessions: typeof SessionToken,
     @InjectModel(User) private readonly users: typeof User
   ) {}

@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  Inject,
   Injectable,
   UnauthorizedException
 } from '@nestjs/common';
@@ -21,7 +22,7 @@ export class JwtAuthAccessGuard
   extends AuthGuard('jwt-access')
   implements CanActivate
 {
-  constructor(private readonly redis: RedisService) {
+  constructor(@Inject('REDIS_AUTH_ACCESS_REVOKED') private readonly redis: RedisService) {
     super();
   }
 
@@ -71,29 +72,4 @@ export class JwtAuthAccessGuard
 
     return true;
   }
-
-  // Optionally override handleRequest to customize error handling
-  // handleRequest<JwtPayload>(err: any, jwt: JwtPayload, info: any) {
-  //   console.log(
-  //     '\nJwtAuthAccessGuard.handleRequest\n',
-  //     '\nERROR: \n',
-  //     err,
-  //     '\nJWT: \n',
-  //     jwt,
-  //     '\nINFO\n',
-  //     info
-  //   );
-  //
-  //   if (err) {
-  //     throw err;
-  //   }
-  //
-  //   if (!jwt) {
-  //     throw new UnauthorizedException(
-  //       'AccessTokenMissing: authorization token missing.'
-  //     );
-  //   }
-  //
-  //   return jwt;
-  // }
 }
