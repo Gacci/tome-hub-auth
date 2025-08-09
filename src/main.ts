@@ -32,7 +32,6 @@ async function bootstrap() {
   });
 
   const configService = app.get(ConfigService);
-  const clientUrl = configService.get<string>('CLIENT_URL');
 
   const config = new DocumentBuilder()
     .setTitle('API Documentation')
@@ -60,9 +59,9 @@ async function bootstrap() {
     maxAge: 86400,
     methods: ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'],
     origin: [
-      clientUrl,
       'http://localhost:4200',
-      'https://localhost:4200'
+      'https://localhost:4200',
+      configService.get<string>('ORIGIN_URL')
     ].filter(Boolean)
   });
 

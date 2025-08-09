@@ -23,21 +23,23 @@ import { UserModule } from './user/user.module';
   imports: [
     AuthModule,
     ConfigModule.forRoot({
-      envFilePath: [path.resolve(process.cwd(), '.env.dev')],
-      ignoreEnvFile: false,
+      // envFilePath: [path.resolve(process.cwd(), '.env.dev')],
+      ignoreEnvFile: true,
       isGlobal: true,
-      load: [
-        () =>
-          dotenv.parse(
-            fs.readFileSync(
-              process.env.NODE_ENV === 'dev'
-                ? '.env.dev'
-                : process.env.NODE_ENV === 'staging'
-                  ? '.env.staging'
-                  : '.env'
-            )
-          )
-      ]
+      // load: [
+      //   () =>
+      //     dotenv.parse(
+      //       fs.readFileSync(
+      //         process.env.NODE_ENV === 'dev'
+      //           ? '.env.dev'
+      //           : process.env.NODE_ENV === 'local'
+      //             ? '.env.local'
+      //             : process.env.NODE_ENV === 'staging'
+      //               ? '.env.staging'
+      //               : '.env'
+      //       )
+      //     )
+      // ]
     }),
     RedisModule,
     SequelizeModule.forRootAsync({
@@ -45,7 +47,7 @@ import { UserModule } from './user/user.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         autoLoadModels: true,
-        database: configService.get<string>('DB_AUTH'),
+        database: configService.get<string>('DB_NAME'),
         dialect: 'mysql',
         host: configService.get<string>('DB_HOST'),
         password: configService.get<string>('DB_PASS'),

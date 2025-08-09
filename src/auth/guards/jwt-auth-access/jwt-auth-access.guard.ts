@@ -22,7 +22,9 @@ export class JwtAuthAccessGuard
   extends AuthGuard('jwt-access')
   implements CanActivate
 {
-  constructor(@Inject('REDIS_AUTH_ACCESS_REVOKED') private readonly redis: RedisService) {
+  constructor(
+    @Inject('REDIS_AUTH_ACCESS_REVOKED') private readonly redis: RedisService
+  ) {
     super();
   }
 

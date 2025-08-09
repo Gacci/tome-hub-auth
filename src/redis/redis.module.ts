@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import Redis from 'ioredis';
 import { RedisService } from '@/redis/redis.service';
+
+import Redis from 'ioredis';
 
 @Module({
   exports: ['REDIS_AUTH_ACCESS_REVOKED', 'REDIS_AUTH_REFRESH_REVOKED'],
@@ -21,13 +22,13 @@ import { RedisService } from '@/redis/redis.service';
     {
       provide: 'REDIS_AUTH_REFRESH_REVOKED', // Pre-configured for auth
       inject: ['REDIS_CLIENT'],
-      useFactory: (redis: Redis) => new RedisService(redis, 'revoked:refresh'),
+      useFactory: (redis: Redis) => new RedisService(redis, 'revoked:refresh')
     },
     {
       provide: 'REDIS_AUTH_ACCESS_REVOKED', // Pre-configured for cache
       inject: ['REDIS_CLIENT'],
-      useFactory: (redis: Redis) => new RedisService(redis, 'revoked:access'),
-    },
+      useFactory: (redis: Redis) => new RedisService(redis, 'revoked:access')
+    }
   ]
 })
 export class RedisModule {}

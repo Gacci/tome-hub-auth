@@ -27,6 +27,7 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit(): Promise<void> {
     try {
+      console.log('RabbitMQService:', process.env);
       this.connection = await amqp.connect(
         this.configService.getOrThrow<string>('RABBITMQ_URL')
       );

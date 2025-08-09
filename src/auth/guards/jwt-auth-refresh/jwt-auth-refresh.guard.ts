@@ -19,7 +19,9 @@ export class JwtAuthRefreshGuard
   extends AuthGuard('jwt-refresh')
   implements CanActivate
 {
-  constructor(@Inject('REDIS_AUTH_REFRESH_REVOKED') private readonly redis: RedisService) {
+  constructor(
+    @Inject('REDIS_AUTH_REFRESH_REVOKED') private readonly redis: RedisService
+  ) {
     super();
   }
 

@@ -45,9 +45,9 @@ import { RegisterAuthDto } from './dto/register-auth.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { VerifyAccountDto } from './dto/verify-account.dto';
+import { AccountVerifiedGuard } from './guards/account-verified/account-verified.guard';
 import { JwtAuthAccessGuard } from './guards/jwt-auth-access/jwt-auth-access.guard';
 import { JwtAuthRefreshGuard } from './guards/jwt-auth-refresh/jwt-auth-refresh.guard';
-import { AccountVerifiedGuard } from './guards/account-verified/account-verified.guard';
 
 @ApiTags('Auth')
 @Controller()
