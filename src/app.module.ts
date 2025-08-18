@@ -23,23 +23,14 @@ import { UserModule } from './user/user.module';
   imports: [
     AuthModule,
     ConfigModule.forRoot({
-      // envFilePath: [path.resolve(process.cwd(), '.env.dev')],
+      // envFilePath: [path.resolve(process.cwd(), '.env')],
       ignoreEnvFile: true,
       isGlobal: true,
-      // load: [
-      //   () =>
-      //     dotenv.parse(
-      //       fs.readFileSync(
-      //         process.env.NODE_ENV === 'dev'
-      //           ? '.env.dev'
-      //           : process.env.NODE_ENV === 'local'
-      //             ? '.env.local'
-      //             : process.env.NODE_ENV === 'staging'
-      //               ? '.env.staging'
-      //               : '.env'
-      //       )
-      //     )
-      // ]
+      load: [
+        ...(process.env.NODE_ENV === 'local' ?  [
+          () => dotenv.parse(fs.readFileSync('.env'))
+        ] : [])
+      ]
     }),
     RedisModule,
     SequelizeModule.forRootAsync({
@@ -100,13 +91,13 @@ export class AppModule implements OnModuleInit {
   constructor(private configService: ConfigService) {}
 
   onModuleInit() {
-    const nodeEnv = this.configService.get<string>('NODE_ENV');
-    const dbHost = this.configService.get<string>('DB_HOST');
-
-    console.log('--- Config Debugging ---');
-    console.log(this.configService);
-    console.log('NODE_ENV:', process.env); // Direct log of NODE_ENV
-    console.log('Environment variable NODE_ENV:', nodeEnv);
-    console.log('DB_HOST:', dbHost);
+    // const nodeEnv = this.configService.get<string>('NODE_ENV');
+    // const dbHost = this.configService.get<string>('DB_HOST');
+    //
+    // console.log('--- Config Debugging ---');
+    // console.log(this.configService);
+    // console.log('NODE_ENV:', process.env); // Direct log of NODE_ENV
+    // console.log('Environment variable NODE_ENV:', nodeEnv);
+    // console.log('DB_HOST:', dbHost);
   }
 }

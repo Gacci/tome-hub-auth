@@ -13,12 +13,13 @@ import {
   Table
 } from 'sequelize-typescript';
 
-import { User } from '../../user/user.model';
+import { User } from '@/user/user.model';
 
 @Table({
-  paranoid: true,
+  // paranoid: true,
   tableName: 'Colleges',
-  timestamps: true
+  timestamps: false
+  // timestamps: true
 })
 export class College extends Model<
   InferAttributes<College>,
@@ -28,28 +29,25 @@ export class College extends Model<
   @Column({ allowNull: false, autoIncrement: true, type: DataType.INTEGER })
   declare collegeId?: CreationOptional<number>;
 
-  @Column({ type: DataType.STRING(1024) })
-  declare locationName: string;
-
   @Column({ allowNull: true, type: DataType.STRING(255) })
   declare emailDomain?: string;
 
-  @Column({
-    allowNull: true,
-    defaultValue: () => Sequelize.literal('CURRENT_TIMESTAMP'),
-    type: DataType.DATE(3)
-  })
-  declare createdAt?: Date;
-
-  @Column({
-    allowNull: true,
-    defaultValue: () => Sequelize.literal('CURRENT_TIMESTAMP'),
-    type: DataType.DATE(3)
-  })
-  declare updatedAt?: Date;
-
-  @Column({ allowNull: true, type: DataType.DATE(3) })
-  declare deletedAt?: Date;
+  // @Column({
+  //   allowNull: true,
+  //   defaultValue: () => Sequelize.literal('CURRENT_TIMESTAMP'),
+  //   type: DataType.DATE(3)
+  // })
+  // declare createdAt?: Date;
+  //
+  // @Column({
+  //   allowNull: true,
+  //   defaultValue: () => Sequelize.literal('CURRENT_TIMESTAMP'),
+  //   type: DataType.DATE(3)
+  // })
+  // declare updatedAt?: Date;
+  //
+  // @Column({ allowNull: true, type: DataType.DATE(3) })
+  // declare deletedAt?: Date;
 
   // Define the reverse relationship (College has one User)
   @HasOne(() => User)

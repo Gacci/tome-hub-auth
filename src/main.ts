@@ -12,6 +12,8 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import * as fs from 'node:fs';
 
+import 'dotenv/config';
+
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors/success-response/success-response.interceptor';
 
@@ -19,9 +21,11 @@ async function bootstrap() {
   dayjs.extend(utc);
   const logger = new Logger('main.ts');
 
-  const isProdEnv = process.env.NODE_ENV === 'prod';
+  const isProdEnv = process.env.NODE_ENV === 'production';
+  const isSslOn = process.env.USE_SSL === 'true';
+  console.log('auth should enable http-options: ', isSslOn, process.env.USE_SSL);
   const app = await NestFactory.create(AppModule, {
-    ...(isProdEnv
+    ...(isProdEnv || isSslOn
       ? {
           httpsOptions: {
             cert: fs.readFileSync('./localhost.pem'),
@@ -32,6 +36,10 @@ async function bootstrap() {
   });
 
   const configService = app.get(ConfigService);
+  console.log(
+    'ALLOWED ORIGINS: ', configService.get('ORIGIN_URL'),
+    'USE_SSL: ', configService.get('USE_SSL')
+  );
 
   const config = new DocumentBuilder()
     .setTitle('API Documentation')
@@ -59,15 +67,15 @@ async function bootstrap() {
     maxAge: 86400,
     methods: ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'],
     origin: [
-      'http://localhost:4200',
-      'https://localhost:4200',
+      'http://localhost',
+      'https://localhost',
       configService.get<string>('ORIGIN_URL')
     ].filter(Boolean)
   });
 
   try {
     const port = configService.get<number>('AUTH_PORT', 3000);
-    await app.listen(port, '0.0.0.0');
+    await app.listen(port); //'0.0.0.0'
     logger.log(
       `************** Server listening on port ${port} **************`
     );

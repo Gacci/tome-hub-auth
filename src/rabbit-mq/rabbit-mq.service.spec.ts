@@ -1,16 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { RabbitMqService } from './rabbit-mq.service';
+import { RabbitMQService } from './rabbit-mq.service';
 
-describe('RabbitMqService', () => {
-  let service: RabbitMqService;
+describe('RabbitMQService', () => {
+  let service: RabbitMQService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [RabbitMqService]
+      providers: [RabbitMQService]
     }).compile();
 
-    service = module.get<RabbitMqService>(RabbitMqService);
+    service = module.get<RabbitMQService>(RabbitMQService);
   });
 
   it('should be defined', () => {
