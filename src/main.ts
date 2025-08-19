@@ -10,9 +10,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import * as fs from 'node:fs';
-
 import 'dotenv/config';
+import * as fs from 'node:fs';
 
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors/success-response/success-response.interceptor';
@@ -23,8 +22,13 @@ async function bootstrap() {
 
   const isProdEnv = process.env.NODE_ENV === 'production';
   const isSslOn = process.env.USE_SSL === 'true';
-  console.log('auth should enable http-options: ', isSslOn, process.env.USE_SSL);
+  console.log(
+    'auth should enable http-options: ',
+    isSslOn,
+    process.env.USE_SSL
+  );
   const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
     ...(isProdEnv || isSslOn
       ? {
           httpsOptions: {
@@ -37,8 +41,10 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService);
   console.log(
-    'ALLOWED ORIGINS: ', configService.get('ORIGIN_URL'),
-    'USE_SSL: ', configService.get('USE_SSL')
+    'ALLOWED ORIGINS: ',
+    configService.get('ORIGIN_URL'),
+    'USE_SSL: ',
+    configService.get('USE_SSL')
   );
 
   const config = new DocumentBuilder()

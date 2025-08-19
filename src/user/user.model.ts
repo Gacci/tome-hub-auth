@@ -79,7 +79,7 @@ export class User extends Model<
     allowNull: false,
     defaultValue: false,
     get() {
-      return Boolean(this.getDataValue('is2faEnabled'))
+      return Boolean(this.getDataValue('is2faEnabled'));
     },
     type: DataType.BOOLEAN
   })
@@ -93,8 +93,8 @@ export class User extends Model<
 
   @Column({
     defaultValue: false,
-    get () {
-      return Boolean(this.getDataValue('isAccountVerified'))
+    get() {
+      return Boolean(this.getDataValue('isAccountVerified'));
     },
     type: DataType.BOOLEAN
   })

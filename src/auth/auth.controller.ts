@@ -22,8 +22,6 @@ import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
-import { CookieOptions, Request, Response } from 'express';
-
 // import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
 import { SuccessResponse } from '@/common/decorators/success-response.decorator';
 import { ProfileImageUrlInterceptor } from '@/common/interceptors/profile-image-url/profile-image-url.interceptor';
@@ -33,6 +31,9 @@ import {
   JWT_REFRESH_TOKEN_NAME
 } from '@/config/constants';
 import { CheckUserAccessGuard } from '@/guards/user-access/check-user-access.guard';
+
+import { CookieOptions, Request, Response } from 'express';
+
 // import { userProfileStorage } from '../common/data/users-merchant-data';
 import { AuthService } from './auth.service';
 import { CredentialsDto } from './dto/credentials.dto';

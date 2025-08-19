@@ -7,7 +7,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
-import * as path from 'node:path';
+import { LoggerModule } from 'nestjs-pino';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module';
@@ -27,10 +27,23 @@ import { UserModule } from './user/user.module';
       ignoreEnvFile: true,
       isGlobal: true,
       load: [
-        ...(process.env.NODE_ENV === 'local' ?  [
-          () => dotenv.parse(fs.readFileSync('.env'))
-        ] : [])
+        ...(process.env.NODE_ENV === 'local'
+          ? [() => dotenv.parse(fs.readFileSync('.env'))]
+          : [])
       ]
+    }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        autoLogging: true, // logs each request automatically
+        transport: {
+          options: {
+            colorize: true,
+            ignore: 'pid,hostname',
+            translateTime: 'SYS:standard'
+          },
+          target: 'pino-pretty' // Make logs readable in dev
+        }
+      }
     }),
     RedisModule,
     SequelizeModule.forRootAsync({
