@@ -313,12 +313,8 @@ export class AuthService {
     return this.users.findOne({ where: { email } });
   }
 
-  async findByPk(userId: number): Promise<User | null> {
-    return this.users.findByPk(userId);
-  }
-
   async findProfile(userId: number): Promise<User | null> {
-    return this.users.findByPk(userId, { raw: true });
+    return this.users.findByPk(userId);
   }
 
   async sendResetPasswordOtp(email: string): Promise<void> {

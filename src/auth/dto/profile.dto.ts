@@ -38,6 +38,9 @@ export class ProfileDto {
   membershipExpiresAt: Date;
 
   @Expose()
+  isAccountVerified: boolean;
+
+  @Expose()
   createdAt: Date;
 
   @Expose()

@@ -75,7 +75,14 @@ export class User extends Model<
   })
   declare membershipExpiresAt?: Date;
 
-  @Column({ allowNull: false, defaultValue: false, type: DataType.BOOLEAN })
+  @Column({
+    allowNull: false,
+    defaultValue: false,
+    get() {
+      return Boolean(this.getDataValue('is2faEnabled'))
+    },
+    type: DataType.BOOLEAN
+  })
   declare is2faEnabled?: boolean;
 
   @Column({ allowNull: true, type: DataType.STRING(16) })
@@ -84,7 +91,13 @@ export class User extends Model<
   @Column({ allowNull: true, type: DataType.STRING(64) })
   declare cellPhoneCarrier?: string | null;
 
-  @Column({ defaultValue: false, type: DataType.BOOLEAN })
+  @Column({
+    defaultValue: false,
+    get () {
+      return Boolean(this.getDataValue('isAccountVerified'))
+    },
+    type: DataType.BOOLEAN
+  })
   declare isAccountVerified?: boolean;
 
   @Column({ allowNull: true, type: DataType.STRING(6) })
