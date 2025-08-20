@@ -5,13 +5,14 @@ import { faker } from '@faker-js/faker';
 
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import * as bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { College } from 'src/colleges/models/college.model';
 
-import { AppModule } from '../../src/app.module';
-import { Membership } from '../../src/common/enums/membership.enum';
-import { User } from '../../src/user/user.model';
+import { AppModule } from '@/app.module';
+import { Membership } from '@/common/enums/membership.enum';
+import { User } from '@/user/user.model';
 
 async function seedUserRatings(size: number = 100) {
   const app = await NestFactory.createApplicationContext(AppModule);
@@ -51,6 +52,7 @@ async function seedUserRatings(size: number = 100) {
           `${firstName}.${lastName}@${college?.['emailDomain']}`.toLowerCase(),
         firstName,
         lastName,
+        password: await bcrypt.hash('1234567890', 3),
         membership: faker.helpers.arrayElement(Object.values(Membership)),
         membershipExpiresAt: faker.number.int({ max: 1, min: 0 })
           ? faker.date.past()

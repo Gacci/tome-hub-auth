@@ -19,9 +19,9 @@ import {
   Scopes,
   Table
 } from 'sequelize-typescript';
-import { Membership } from 'src/common/enums/membership.enum';
+import { Membership } from '@/common/enums/membership.enum';
 
-import { College } from '../colleges/models/college.model';
+import { College } from '@/colleges/models/college.model';
 
 @DefaultScope(() => ({
   attributes: { exclude: ['password'] }
