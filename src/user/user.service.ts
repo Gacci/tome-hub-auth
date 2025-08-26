@@ -15,9 +15,13 @@ export class UserService {
   }
 
   async search(query: SearchUsersDto) {
-    return await this.users.findAll({
+    console.log(query);
+    const users = await this.users.findAll({
       attributes: [
         'userId',
+        'collegeId',
+        'firstName',
+        'lastName',
         'email',
         'membership',
         'membershipExpiresAt',
@@ -25,12 +29,14 @@ export class UserService {
       ],
       limit: query.pageSize,
       offset: query.pageSize * (query.pageNumber - 1),
-      // raw: true,
+      raw: true,
       where: {
         ...(query.userId?.length ? { userId: { [Op.in]: query.userId } } : {}),
         ...(query.collegeId ? { collegeId: query.collegeId } : {}),
         ...(query.email?.length ? { email: { [Op.in]: query.email } } : {})
       }
     });
+
+    return users; //users.map((user: User) => user.toJSON())
   }
 }

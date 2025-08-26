@@ -7,9 +7,9 @@ import {
   UseGuards
 } from '@nestjs/common';
 
-import { InternalGuard } from '../guards/internal/internal.guard';
-import { SearchUsersDto } from './dto/search-user.dto';
-import { UserService } from './user.service';
+import { InternalGuard } from '@/guards/internal/internal.guard';
+import { SearchUsersDto } from '@/user/dto/search-user.dto';
+import { UserService } from '@/user/user.service';
 
 @UseGuards(InternalGuard)
 @Controller('users')

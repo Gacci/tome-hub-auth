@@ -4,18 +4,17 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { SequelizeModule } from '@nestjs/sequelize';
 
-import { AwsConfigService } from '../aws/aws-config.service';
-import { CollegesService } from '../colleges/colleges.service';
-import { College } from '../colleges/models/college.model';
-import { CheckUserAccessGuard } from '../guards/user-access/check-user-access.guard';
-import { MailerModule } from '../mailer/mailer.module';
-import { RabbitMQModule } from '../rabbit-mq/rabbit-mq.module';
-import { RedisModule } from '../redis/redis.module';
-import { RedisService } from '../redis/redis.service';
-import { User } from '../user/user.model';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { SessionToken } from './models/session-token.model';
+import { AwsConfigService } from '@/aws/aws-config.service';
+import { CollegesService } from '@/colleges/colleges.service';
+import { College } from '@/colleges/models/college.model';
+import { CheckUserAccessGuard } from '@/guards/user-access/check-user-access.guard';
+import { MailerModule } from '@/mailer/mailer.module';
+import { RabbitMQModule } from '@/rabbit-mq/rabbit-mq.module';
+import { RedisModule } from '@/redis/redis.module';
+import { User } from '@/user/user.model';
+import { AuthController } from '@/auth/auth.controller';
+import { AuthService } from '@/auth/auth.service';
+import { SessionToken } from '@/auth/models/session-token.model';
 
 @Module({
   controllers: [AuthController],

@@ -29,6 +29,7 @@ export class InternalGuard implements CanActivate {
       .split(',')
       .map(k => k.trim());
 
+    console.log('\nheaderKey: ', headerKey, '\nkeys: ', keys);
     if (!keys.includes(headerKey)) {
       throw new UnauthorizedException('Unauthorized internal access.');
     }

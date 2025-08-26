@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ProfileDto } from 'src/auth/dto/profile.dto';
 
-import { S3Bucket } from '../../../aws/aws-config.service';
+import { S3Bucket } from '@/aws/aws-config.service';
 
 @Injectable()
 export class ProfileImageUrlInterceptor implements NestInterceptor {

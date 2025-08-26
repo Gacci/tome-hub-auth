@@ -11,13 +11,12 @@ import {
 
 export class SearchUsersDto {
   @IsOptional()
-  @Transform(({ value }) =>
-    Array.isArray(value)
-      ? value.map(Number)
-      : value !== undefined
-        ? [Number(value)]
-        : []
-  )
+  @Transform(({ value }) => {
+    console.log(value, typeof value);
+    return value?.length && typeof value === 'string'
+      ? value.split(',').map(Number)
+      : value
+  })
   @IsArray()
   @IsInt({ each: true })
   userId?: number[];
@@ -29,11 +28,9 @@ export class SearchUsersDto {
 
   @IsOptional()
   @Transform(({ value }) =>
-    Array.isArray(value)
-      ? value.map(String)
-      : value !== undefined
-        ? [String(value)]
-        : []
+    typeof value?.length && value === 'string'
+      ? value.split(',').map(Number)
+      : value
   )
   @IsArray()
   @IsString({ each: true })
@@ -51,4 +48,9 @@ export class SearchUsersDto {
   @IsInt()
   @Min(1)
   pageNumber: number = 1;
+
+
+  // get userId() {
+  //   return this['userId[]'];
+  // }
 }

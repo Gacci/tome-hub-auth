@@ -8,6 +8,6 @@ import { JwtAuthAccessGuard } from './jwt-auth-access.guard';
 
 describe('JwtAuthAccessGuard', () => {
   it('should be defined', () => {
-    expect(new RedisService(new Redis(), new ConfigService())).toBeDefined();
+    expect(new RedisService(new Redis(), 'access')).toBeDefined();
   });
 });

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { AwsConfigService } from './aws-config.service';
+import { AwsConfigService } from '@/aws/aws-config.service';
 
 describe('AwsConfigService', () => {
   let service: AwsConfigService;

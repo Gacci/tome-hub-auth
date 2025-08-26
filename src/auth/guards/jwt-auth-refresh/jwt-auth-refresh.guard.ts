@@ -9,10 +9,10 @@ import { AuthGuard } from '@nestjs/passport';
 
 import { Request } from 'express';
 
-import { JwtPayload } from '../../../common/interfaces/jwt-payload.interface';
-import { JWT_REFRESH_TOKEN_NAME } from '../../../config/constants';
-import { RedisService } from '../../../redis/redis.service';
-import { TokenType } from '../../models/session-token.model';
+import { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
+import { JWT_REFRESH_TOKEN_NAME } from '@/config/constants';
+import { RedisService } from '@/redis/redis.service';
+import { TokenType } from '@/auth/models/session-token.model';
 
 @Injectable()
 export class JwtAuthRefreshGuard

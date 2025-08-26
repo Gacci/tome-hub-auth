@@ -12,7 +12,7 @@ import {
   Table
 } from 'sequelize-typescript';
 
-import { User } from '../../user/user.model';
+import { User } from '@/user/user.model';
 
 export enum TokenStatus {
   ACTIVE = 'ACTIVE',
