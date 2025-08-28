@@ -11,10 +11,6 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/sequelize';
 
-import * as crypto from 'crypto';
-import dayjs from 'dayjs';
-import { Op } from 'sequelize';
-
 import { AwsConfigService, S3Bucket } from '@/aws/aws-config.service';
 import { CollegesService } from '@/colleges/colleges.service';
 import { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
@@ -22,6 +18,11 @@ import { MailerService } from '@/mailer/mailer.service';
 import { RabbitMQService, RoutingKey } from '@/rabbit-mq/rabbit-mq.service';
 import { RedisService } from '@/redis/redis.service';
 import { User } from '@/user/user.model';
+
+import * as crypto from 'crypto';
+import dayjs from 'dayjs';
+import { Op } from 'sequelize';
+
 import { CredentialsDto } from './dto/credentials.dto';
 import { LoginAuthDto } from './dto/login.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';

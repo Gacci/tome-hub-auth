@@ -5,6 +5,9 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
+import { AppController } from '@/app.controller';
+import { AppService } from '@/app.service';
+
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { LoggerModule } from 'nestjs-pino';
@@ -17,8 +20,6 @@ import { AwsModule } from './aws/aws.module';
 import { CollegesModule } from './colleges/colleges.module';
 import { RedisModule } from './redis/redis.module';
 import { UserModule } from './user/user.module';
-import { AppService } from '@/app.service';
-import { AppController } from '@/app.controller';
 
 @Module({
   // exports: ['JwtAccessStrategy', 'JwtRefreshStrategy'],

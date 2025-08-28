@@ -1,3 +1,6 @@
+import { College } from '@/colleges/models/college.model';
+import { Membership } from '@/common/enums/membership.enum';
+
 import * as bcrypt from 'bcryptjs';
 import dayjs from 'dayjs';
 import {
@@ -19,9 +22,6 @@ import {
   Scopes,
   Table
 } from 'sequelize-typescript';
-import { Membership } from '@/common/enums/membership.enum';
-
-import { College } from '@/colleges/models/college.model';
 
 @DefaultScope(() => ({
   attributes: { exclude: ['password'] }

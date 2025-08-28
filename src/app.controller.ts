@@ -1,7 +1,8 @@
 import { Controller, Get } from '@nestjs/common';
 
-import { AppService } from './app.service';
 import dayjs from 'dayjs';
+
+import { AppService } from './app.service';
 
 @Controller()
 export class AppController {
@@ -11,7 +12,7 @@ export class AppController {
   check() {
     return {
       status: 'ok',
-      timestamp: dayjs().utc().toDate(),
+      timestamp: dayjs().utc().toDate()
     };
   }
 }

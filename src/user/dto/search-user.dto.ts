@@ -15,7 +15,7 @@ export class SearchUsersDto {
     console.log(value, typeof value);
     return value?.length && typeof value === 'string'
       ? value.split(',').map(Number)
-      : value
+      : value;
   })
   @IsArray()
   @IsInt({ each: true })
@@ -48,7 +48,6 @@ export class SearchUsersDto {
   @IsInt()
   @Min(1)
   pageNumber: number = 1;
-
 
   // get userId() {
   //   return this['userId[]'];

@@ -7,12 +7,12 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import { Request } from 'express';
-
+import { TokenType } from '@/auth/models/session-token.model';
 import { JwtPayload } from '@/common/interfaces/jwt-payload.interface';
 import { JWT_REFRESH_TOKEN_NAME } from '@/config/constants';
 import { RedisService } from '@/redis/redis.service';
-import { TokenType } from '@/auth/models/session-token.model';
+
+import { Request } from 'express';
 
 @Injectable()
 export class JwtAuthRefreshGuard

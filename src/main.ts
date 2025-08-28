@@ -72,9 +72,7 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
     maxAge: 86400,
     methods: ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'],
-    origin:
-        configService.get<string>('ORIGIN_URL', '')
-            .split(',')
+    origin: configService.get<string>('ORIGIN_URL', '').split(',')
   });
 
   try {

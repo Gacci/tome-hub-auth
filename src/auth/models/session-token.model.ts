@@ -1,3 +1,5 @@
+import { User } from '@/user/user.model';
+
 import {
   CreationOptional,
   InferAttributes,
@@ -11,8 +13,6 @@ import {
   PrimaryKey,
   Table
 } from 'sequelize-typescript';
-
-import { User } from '@/user/user.model';
 
 export enum TokenStatus {
   ACTIVE = 'ACTIVE',
