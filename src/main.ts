@@ -20,7 +20,7 @@ async function bootstrap() {
   dayjs.extend(utc);
   const logger = new Logger('main.ts');
 
-  const isProdEnv = process.env.NODE_ENV === 'production';
+  const isProdEnv = process.env.APP_ENV === 'production';
   const isSslOn = process.env.USE_SSL === 'true';
   console.log(
     'auth should enable http-options: ',
@@ -72,11 +72,9 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
     maxAge: 86400,
     methods: ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'],
-    origin: [
-      'http://localhost',
-      'https://localhost',
-      configService.get<string>('ORIGIN_URL')
-    ].filter(Boolean)
+    origin:
+        configService.get<string>('ORIGIN_URL', '')
+            .split(',')
   });
 
   try {

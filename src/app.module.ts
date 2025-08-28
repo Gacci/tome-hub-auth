@@ -27,7 +27,7 @@ import { UserModule } from './user/user.module';
       ignoreEnvFile: true,
       isGlobal: true,
       load: [
-        ...(process.env.NODE_ENV === 'local'
+        ...(process.env.APP_ENV === 'local'
           ? [() => dotenv.parse(fs.readFileSync('.env'))]
           : [])
       ]
