@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import 'dotenv/config';
 import * as fs from 'node:fs';
+import * as path from 'path';
 
 import { AppModule } from './app.module';
 import { ResponseInterceptor } from './common/interceptors/success-response/success-response.interceptor';
@@ -32,17 +33,18 @@ async function bootstrap() {
     ...(isProdEnv || isSslOn
       ? {
           httpsOptions: {
-            cert: fs.readFileSync('./localhost.pem'),
-            key: fs.readFileSync('./localhost-key.pem')
+            cert: fs.readFileSync(path.join(__dirname, './localhost.pem')),
+            key: fs.readFileSync(path.join(__dirname, './localhost-key.pem'))
           }
         }
       : {})
   });
 
   const configService = app.get(ConfigService);
+  const allowedOrigins = configService.get<string>('ORIGIN_URL', '').split(',');
   console.log(
     'ALLOWED ORIGINS: ',
-    configService.get('ORIGIN_URL'),
+    allowedOrigins,
     'USE_SSL: ',
     configService.get('USE_SSL')
   );
@@ -72,7 +74,14 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
     maxAge: 86400,
     methods: ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'],
-    origin: configService.get<string>('ORIGIN_URL', '').split(',')
+    origin: (origin: string, callback: (...args) => void) => {
+      console.log('origin', origin);
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    }
   });
 
   try {
