@@ -1,7 +1,7 @@
 # Step 1: Build the app
 FROM node:22 AS builder
 
-ARG APP_ENV=dev
+ARG APP_ENV=development
 
 # Set working directory inside container
 WORKDIR /app
@@ -17,12 +17,6 @@ RUN curl -sS https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait
 # Copy the entire app (source code)
 COPY . .
 
-# Create the destination file based on the environment
-#RUN if [ "$NODE_ENV" = "dev" ]; then \
-#      cp .env.dev .env; \
-#    elif [ "$NODE_ENV" = "staging" ]; then \
-#      cp .env.staging .env.staging; \
-#    fi
 
 # Step 2: Build the app
 RUN npm run build
