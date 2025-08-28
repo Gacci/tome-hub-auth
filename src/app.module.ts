@@ -17,11 +17,16 @@ import { AwsModule } from './aws/aws.module';
 import { CollegesModule } from './colleges/colleges.module';
 import { RedisModule } from './redis/redis.module';
 import { UserModule } from './user/user.module';
+import { AppService } from '@/app.service';
+import { AppController } from '@/app.controller';
 
 @Module({
   // exports: ['JwtAccessStrategy', 'JwtRefreshStrategy'],
+  controllers: [AppController],
   imports: [
     AuthModule,
+    AwsModule,
+    CollegesModule,
     ConfigModule.forRoot({
       // envFilePath: [path.resolve(process.cwd(), '.env')],
       ignoreEnvFile: true,
@@ -81,11 +86,10 @@ import { UserModule } from './user/user.module';
         ttl: 60000
       }
     ]),
-    UserModule,
-    AwsModule,
-    CollegesModule
+    UserModule
   ],
   providers: [
+    AppService,
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard

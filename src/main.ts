@@ -79,7 +79,7 @@ async function bootstrap() {
 
   try {
     const port = configService.get<number>('AUTH_PORT', 3000);
-    await app.listen(port); //'0.0.0.0'
+    await app.listen(port, '0.0.0.0');
     logger.log(
       `************** Server listening on port ${port} **************`
     );
