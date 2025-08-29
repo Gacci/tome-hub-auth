@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+# ignore wait-for-it
+wait-for-it.sh
+
 # Logs
 logs
 *.log

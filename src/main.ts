@@ -74,7 +74,7 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
     maxAge: 86400,
     methods: ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'],
-    origin: (origin: string, callback: (...args) => void) => {
+    origin: (origin: string | undefined, callback: (error: Error | null, success?: boolean) => void) => {
       console.log('origin', origin);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
