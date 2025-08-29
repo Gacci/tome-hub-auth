@@ -76,7 +76,7 @@ async function bootstrap() {
     methods: ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'],
     origin: (origin: string, callback: (...args) => void) => {
       console.log('origin', origin);
-      if (allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
