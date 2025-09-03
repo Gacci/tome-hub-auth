@@ -18,6 +18,8 @@ import { JwtAccessStrategy } from './auth/strategies/jwt-access.strategy';
 import { JwtRefreshStrategy } from './auth/strategies/jwt-refresh.strategy';
 import { AwsModule } from './aws/aws.module';
 import { CollegesModule } from './colleges/colleges.module';
+import { EnvironmentService } from './common/services/environment/environment.service';
+import { S3StorageService } from './common/services/s3-storage/s3-storage.service';
 import { RedisModule } from './redis/redis.module';
 import { UserModule } from './user/user.module';
 
@@ -38,6 +40,7 @@ import { UserModule } from './user/user.module';
           : [])
       ]
     }),
+    //
     LoggerModule.forRoot({
       pinoHttp: {
         autoLogging: true, // logs each request automatically
@@ -102,7 +105,9 @@ import { UserModule } from './user/user.module';
     {
       provide: 'JwtRefreshStrategy',
       useClass: JwtRefreshStrategy
-    }
+    },
+    EnvironmentService,
+    S3StorageService
   ]
 })
 export class AppModule implements OnModuleInit {

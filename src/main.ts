@@ -21,33 +21,13 @@ async function bootstrap() {
   dayjs.extend(utc);
   const logger = new Logger('main.ts');
 
-  const isProdEnv = process.env.APP_ENV === 'production';
-  const isSslOn = process.env.USE_SSL === 'true';
-  console.log(
-    'auth should enable http-options: ',
-    isSslOn,
-    process.env.USE_SSL
-  );
+  console.log('should enable http-options: ', process.env);
   const app = await NestFactory.create(AppModule, {
-    bufferLogs: true,
-    ...(isProdEnv || isSslOn
-      ? {
-          httpsOptions: {
-            cert: fs.readFileSync(path.join(__dirname, './localhost.pem')),
-            key: fs.readFileSync(path.join(__dirname, './localhost-key.pem'))
-          }
-        }
-      : {})
+    bufferLogs: true
   });
 
   const configService = app.get(ConfigService);
   const allowedOrigins = configService.get<string>('ORIGIN_URL', '').split(',');
-  console.log(
-    'ALLOWED ORIGINS: ',
-    allowedOrigins,
-    'USE_SSL: ',
-    configService.get('USE_SSL')
-  );
 
   const config = new DocumentBuilder()
     .setTitle('API Documentation')
@@ -74,7 +54,10 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
     maxAge: 86400,
     methods: ['DELETE', 'GET', 'OPTIONS', 'PATCH', 'POST', 'PUT'],
-    origin: (origin: string | undefined, callback: (error: Error | null, success?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, success?: boolean) => void
+    ) => {
       console.log('origin', origin);
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);

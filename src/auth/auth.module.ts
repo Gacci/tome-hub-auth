@@ -10,6 +10,8 @@ import { SessionToken } from '@/auth/models/session-token.model';
 import { AwsConfigService } from '@/aws/aws-config.service';
 import { CollegesService } from '@/colleges/colleges.service';
 import { College } from '@/colleges/models/college.model';
+import { EnvironmentService } from '@/common/services/environment/environment.service';
+import { S3StorageService } from '@/common/services/s3-storage/s3-storage.service';
 import { CheckUserAccessGuard } from '@/guards/user-access/check-user-access.guard';
 import { MailerModule } from '@/mailer/mailer.module';
 import { RabbitMQModule } from '@/rabbit-mq/rabbit-mq.module';
@@ -39,7 +41,9 @@ import { User } from '@/user/user.model';
     AwsConfigService,
     AuthService,
     CheckUserAccessGuard,
-    CollegesService
+    CollegesService,
+    EnvironmentService,
+    S3StorageService
   ]
 })
 export class AuthModule {}

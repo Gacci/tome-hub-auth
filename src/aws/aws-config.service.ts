@@ -1,12 +1,7 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import {
-  CreateBucketCommand,
-  HeadBucketCommand,
-  PutObjectCommand,
-  S3Client
-} from '@aws-sdk/client-s3';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 import crypto from 'crypto';
 import multer from 'multer';
@@ -33,35 +28,17 @@ export class AwsConfigService {
     });
   }
 
-  getMulterS3Storage() {
-    return multer({ storage: multer.memoryStorage() });
-  }
+  // getMulterS3Storage() {
+  //   return multer({ storage: multer.memoryStorage() });
+  // }
 
-  isAllowedBucket(s3BucketKey: S3Bucket) {
-    return Object.values(S3Bucket).includes(s3BucketKey);
-  }
-
-  async exists(bucketName: S3Bucket): Promise<boolean> {
-    try {
-      await this.s3Client.send(new HeadBucketCommand({ Bucket: bucketName }));
-      return true;
-    } catch (error) {
-      this.logger.error(error);
-      return false;
-    }
+  isAllowedBucket(key: string): key is S3Bucket {
+    return Object.values(S3Bucket).includes(key as S3Bucket);
   }
 
   async upload(bucketName: S3Bucket, file: Express.Multer.File) {
     if (!this.isAllowedBucket(bucketName)) {
       throw new BadRequestException('Specified S3 bucket is not allowed.');
-    }
-
-    if (!(await this.exists(bucketName))) {
-      await this.s3Client.send(
-        new CreateBucketCommand({
-          Bucket: bucketName
-        })
-      );
     }
 
     const unique = `${(Date.now().toString() + crypto.randomBytes(16).toString('hex')).slice(0, 32).replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5')}${extname(file.originalname)}`;
