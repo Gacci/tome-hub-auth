@@ -9,7 +9,7 @@ import { extname } from 'path';
 import { EnvironmentService } from '@/common/services/environment/environment.service';
 
 export enum S3Bucket {
-  PROFILES = 'profiles'
+  PROFILES = 'cHJvZmlsZXM'
 }
 
 @Injectable()
@@ -54,10 +54,7 @@ export class AwsConfigService {
     await this.s3Client.send(
       new PutObjectCommand({
         Body: file.buffer,
-        Bucket: [
-          ...(this.envService.isProduction() ? [ 'ant' ] : []),
-          bucketName.toString()
-        ].join('-'),
+        Bucket: bucketName,
         Key: unique
       })
     );
