@@ -4,8 +4,9 @@ import { ConfigService } from '@nestjs/config';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 import crypto from 'crypto';
-import multer from 'multer';
+// import multer from 'multer';
 import { extname } from 'path';
+import { EnvironmentService } from '@/common/services/environment/environment.service';
 
 export enum S3Bucket {
   PROFILES = 'profiles'
@@ -16,15 +17,23 @@ export class AwsConfigService {
   private readonly logger = new Logger(AwsConfigService.name);
   private readonly s3Client: S3Client;
 
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly envService: EnvironmentService
+  ) {
     this.s3Client = new S3Client({
       credentials: {
         accessKeyId: this.configService.getOrThrow('AWS_ACCESS_KEY_ID'),
         secretAccessKey: this.configService.getOrThrow('AWS_SECRET_ACCESS_KEY')
       },
-      endpoint: this.configService.getOrThrow('AWS_GATEWAY'),
-      forcePathStyle: true,
-      region: this.configService.getOrThrow('AWS_S3_REGION')
+      region: this.configService.getOrThrow('AWS_S3_REGION'),
+      ...(!this.envService.isProduction()
+          ? {
+            endpoint: this.configService.getOrThrow('AWS_GATEWAY'),
+            forcePathStyle: true,
+          }
+          : {}
+      )
     });
   }
 
@@ -45,7 +54,10 @@ export class AwsConfigService {
     await this.s3Client.send(
       new PutObjectCommand({
         Body: file.buffer,
-        Bucket: bucketName,
+        Bucket: [
+          ...(this.envService.isProduction() ? [ 'ant' ] : []),
+          bucketName.toString()
+        ].join('-'),
         Key: unique
       })
     );
