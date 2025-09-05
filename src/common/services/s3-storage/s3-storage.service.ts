@@ -12,7 +12,7 @@ export class S3StorageService {
   ) {}
 
   getProfileImageUrl(s3StorageKey: string) {
-    return this.getFileUrl(s3StorageKey, S3Bucket.PROFILES);
+    return this.getFileUrl(s3StorageKey, S3Bucket.USER_PROFILES);
   }
 
   getFileUrl(s3StorageKey: string, s3BucketName: string) {
@@ -21,7 +21,7 @@ export class S3StorageService {
     }
 
     if (this.env.isDevelopment()) {
-      return `http://localhost/media/${s3BucketName}/${s3StorageKey}`;
+      return `http://localhost:4566/media/${s3BucketName}/${s3StorageKey}`;
     }
 
     if (this.env.isLocal()) {

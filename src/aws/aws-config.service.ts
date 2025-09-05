@@ -9,7 +9,7 @@ import { extname } from 'path';
 import { EnvironmentService } from '@/common/services/environment/environment.service';
 
 export enum S3Bucket {
-  PROFILES = 'dxnlci1wcm9mawxlcw'
+  USER_PROFILES = 'ant-profiles'
 }
 
 @Injectable()
