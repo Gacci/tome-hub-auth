@@ -7,6 +7,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { AuthController } from '@/auth/auth.controller';
 import { AuthService } from '@/auth/auth.service';
 import { SessionToken } from '@/auth/models/session-token.model';
+import { CookieService } from '@/auth/services/cookie/cookie.service';
 import { AwsConfigService } from '@/aws/aws-config.service';
 import { CollegesService } from '@/colleges/colleges.service';
 import { College } from '@/colleges/models/college.model';
@@ -43,7 +44,8 @@ import { User } from '@/user/user.model';
     CheckUserAccessGuard,
     CollegesService,
     EnvironmentService,
-    S3StorageService
+    S3StorageService,
+    CookieService
   ]
 })
 export class AuthModule {}

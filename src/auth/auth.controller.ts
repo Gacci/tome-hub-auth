@@ -22,6 +22,7 @@ import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
+import { CookieService } from '@/auth/services/cookie/cookie.service';
 // import { AwsConfigService, S3Bucket } from '../aws/aws-config.service';
 import { SuccessResponse } from '@/common/decorators/success-response.decorator';
 import { ProfileImageUrlInterceptor } from '@/common/interceptors/profile-image-url/profile-image-url.interceptor';
@@ -49,7 +50,6 @@ import { VerifyAccountDto } from './dto/verify-account.dto';
 import { AccountVerifiedGuard } from './guards/account-verified/account-verified.guard';
 import { JwtAuthAccessGuard } from './guards/jwt-auth-access/jwt-auth-access.guard';
 import { JwtAuthRefreshGuard } from './guards/jwt-auth-refresh/jwt-auth-refresh.guard';
-import { EnvironmentService } from '@/common/services/environment/environment.service';
 
 @ApiTags('Auth')
 @Controller()
@@ -58,7 +58,7 @@ export class AuthController {
     private readonly auth: AuthService,
     // private readonly awsConfigService: AwsConfigService,
     private readonly config: ConfigService,
-    private readonly env: EnvironmentService
+    private readonly cookie: CookieService
   ) {}
 
   @Post('account/register')
@@ -116,29 +116,20 @@ export class AuthController {
     @Body() loginAuthDto: LoginAuthDto
   ) {
     const tokens = await this.auth.login(loginAuthDto);
-    const options: CookieOptions = {
-      httpOnly: this.env.isProduction(),
-        maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES'),
-      secure: false,
-      path: '/',
-      ...(this.env.isProduction()
-        ? {
-          domain: 'sydebook.com',
-          sameSite: 'none'
-        }
-        : {
-          sameSite: 'lax'
-        })
-    };
-
-    res.cookie(JWT_ACCESS_TOKEN_NAME, tokens?.jwtAccessToken, {
-      ...options,
-      maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES')
-    });
-    res.cookie(JWT_REFRESH_TOKEN_NAME, tokens?.jwtRefreshToken, {
-      ...options,
-      maxAge: 1000 * +this.config.get('JWT_REFRESH_TOKEN_EXPIRES')
-    });
+    res.cookie(
+      JWT_ACCESS_TOKEN_NAME,
+      tokens?.jwtAccessToken,
+      this.cookie.getOptions({
+        maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES')
+      })
+    );
+    res.cookie(
+      JWT_REFRESH_TOKEN_NAME,
+      tokens?.jwtRefreshToken,
+      this.cookie.getOptions({
+        maxAge: 1000 * +this.config.get('JWT_REFRESH_TOKEN_EXPIRES')
+      })
+    );
 
     return {
       [JWT_ACCESS_TOKEN_NAME]: tokens?.jwtAccessToken,
@@ -162,24 +153,15 @@ export class AuthController {
     );
     await this.auth.revokeRefreshToken(req.user);
 
-    const options: CookieOptions = {
-      httpOnly: this.env.isProduction(),
-      secure: false,
-      path: '/',
-      ...(this.env.isProduction()
-        ? {
-
-          domain: 'sydebook.com',
-          sameSite: 'none',
-        } : {
-          domain: '/',
-          sameSite: 'lax',
-        })
-    };
-
     // Clear both access and refresh token cookies
-    res.clearCookie(JWT_ACCESS_TOKEN_NAME, options);
-    res.clearCookie(JWT_REFRESH_TOKEN_NAME, options);
+    res.clearCookie(
+      JWT_ACCESS_TOKEN_NAME,
+      this.cookie.getOptions({ maxAge: 0 })
+    );
+    res.clearCookie(
+      JWT_REFRESH_TOKEN_NAME,
+      this.cookie.getOptions({ maxAge: 0 })
+    );
   }
 
   @Post('account/login/otp/resend')
@@ -334,23 +316,13 @@ export class AuthController {
     const jwtAccessToken = await this.auth.exchangeAccessToken(req.user);
     console.log('jwtAccessToken: ', jwtAccessToken, 'req.user: ', req.user);
 
-
-
-    res.cookie(JWT_ACCESS_TOKEN_NAME, jwtAccessToken, {
-      httpOnly: this.env.isProduction(),
-      maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES'),
-      secure: false,
-      path: '/',
-      ...(this.env.isProduction()
-        ? {
-
-          domain: 'sydebook.com',
-          sameSite: 'none',
-        } : {
-          domain: '/',
-          sameSite: 'lax',
-        })
-    });
+    res.cookie(
+      JWT_ACCESS_TOKEN_NAME,
+      jwtAccessToken,
+      this.cookie.getOptions({
+        maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES')
+      })
+    );
 
     return { [JWT_ACCESS_TOKEN_NAME]: jwtAccessToken };
   }

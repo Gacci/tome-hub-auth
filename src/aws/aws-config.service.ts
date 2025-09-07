@@ -1,13 +1,12 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
+import { EnvironmentService } from '@/common/services/environment/environment.service';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 import crypto from 'crypto';
-import sharp from 'sharp';
 import { extname } from 'path';
-
-import { EnvironmentService } from '@/common/services/environment/environment.service';
+import sharp from 'sharp';
 
 // import multer from 'multer';
 export enum S3Bucket {
@@ -32,12 +31,11 @@ export class AwsConfigService {
       },
       region: this.configService.getOrThrow('AWS_S3_REGION'),
       ...(!this.envService.isProduction()
-          ? {
+        ? {
             endpoint: this.configService.getOrThrow('AWS_GATEWAY'),
-            forcePathStyle: true,
+            forcePathStyle: true
           }
-          : {}
-      )
+        : {})
     });
   }
 
@@ -58,11 +56,9 @@ export class AwsConfigService {
     await this.s3Client.send(
       new PutObjectCommand({
         ContentType: 'image/jpeg',
-        Body: await sharp(file.buffer)
-          .toFormat(S3ImageFormat)
-          .toBuffer(),
+        Body: await sharp(file.buffer).toFormat(S3ImageFormat).toBuffer(),
         Bucket: bucketName,
-        CacheControl: "public, max-age=2592000",
+        CacheControl: 'public, max-age=2592000',
         Key: unique
       })
     );

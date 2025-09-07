@@ -8,7 +8,10 @@ export class EnvironmentService {
   private readonly env: RuntimeEnvironment;
 
   constructor(private readonly configService: ConfigService) {
-    this.env = this.configService.get<string>('APP_ENV', 'development') as RuntimeEnvironment;
+    this.env = this.configService.get<string>(
+      'APP_ENV',
+      'development'
+    ) as RuntimeEnvironment;
   }
 
   isDevelopment(): boolean {
