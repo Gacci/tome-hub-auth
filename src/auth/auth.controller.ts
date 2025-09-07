@@ -49,6 +49,7 @@ import { VerifyAccountDto } from './dto/verify-account.dto';
 import { AccountVerifiedGuard } from './guards/account-verified/account-verified.guard';
 import { JwtAuthAccessGuard } from './guards/jwt-auth-access/jwt-auth-access.guard';
 import { JwtAuthRefreshGuard } from './guards/jwt-auth-refresh/jwt-auth-refresh.guard';
+import { EnvironmentService } from '@/common/services/environment/environment.service';
 
 @ApiTags('Auth')
 @Controller()
@@ -56,7 +57,8 @@ export class AuthController {
   constructor(
     private readonly auth: AuthService,
     // private readonly awsConfigService: AwsConfigService,
-    private readonly config: ConfigService
+    private readonly config: ConfigService,
+    private readonly env: EnvironmentService
   ) {}
 
   @Post('account/register')
@@ -114,16 +116,19 @@ export class AuthController {
     @Body() loginAuthDto: LoginAuthDto
   ) {
     const tokens = await this.auth.login(loginAuthDto);
-    const isProdEnv = ['prod', 'production'].includes(
-      this.config.get<string>('NODE_ENV', '')
-    );
-
     const options: CookieOptions = {
-      httpOnly: false, // Prevent JS access
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      httpOnly: this.env.isProduction(),
+        maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES'),
+      secure: false,
       path: '/',
-      sameSite: isProdEnv ? 'none' : 'lax', // Allow cross-origin in prod
-      secure: isProdEnv // Use HTTPS in prod only
+      ...(this.env.isProduction()
+        ? {
+          domain: 'sydebook.com',
+          sameSite: 'none'
+        }
+        : {
+          sameSite: 'lax'
+        })
     };
 
     res.cookie(JWT_ACCESS_TOKEN_NAME, tokens?.jwtAccessToken, {
@@ -155,18 +160,21 @@ export class AuthController {
     console.log(
       '**************************  LOG OUT ************************** '
     );
-    const isProdEnv = ['prod', 'production'].includes(
-      this.config.get<string>('NODE_ENV', '')
-    );
     await this.auth.revokeRefreshToken(req.user);
 
     const options: CookieOptions = {
-      httpOnly: isProdEnv, //isProdEnv,
-      maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES'),
-      domain: 'localhost', // Same domain as when setting the cookie
+      httpOnly: this.env.isProduction(),
+      secure: false,
       path: '/',
-      sameSite: isProdEnv ? 'none' : 'lax', // Allow cross-origin in prod
-      secure: isProdEnv // Use HTTPS in prod only
+      ...(this.env.isProduction()
+        ? {
+
+          domain: 'sydebook.com',
+          sameSite: 'none',
+        } : {
+          domain: '/',
+          sameSite: 'lax',
+        })
     };
 
     // Clear both access and refresh token cookies
@@ -325,16 +333,23 @@ export class AuthController {
   ) {
     const jwtAccessToken = await this.auth.exchangeAccessToken(req.user);
     console.log('jwtAccessToken: ', jwtAccessToken, 'req.user: ', req.user);
-    const isProdEnv = ['prod', 'production'].includes(
-      this.config.get<string>('NODE_ENV', '')
-    );
+
+
 
     res.cookie(JWT_ACCESS_TOKEN_NAME, jwtAccessToken, {
-      httpOnly: isProdEnv, //isProdEnv,
+      httpOnly: this.env.isProduction(),
       maxAge: 1000 * +this.config.get('JWT_ACCESS_TOKEN_EXPIRES'),
+      secure: false,
       path: '/',
-      sameSite: isProdEnv ? 'none' : 'lax', // Allow cross-origin in prod
-      secure: isProdEnv // Use HTTPS in prod only
+      ...(this.env.isProduction()
+        ? {
+
+          domain: 'sydebook.com',
+          sameSite: 'none',
+        } : {
+          domain: '/',
+          sameSite: 'lax',
+        })
     });
 
     return { [JWT_ACCESS_TOKEN_NAME]: jwtAccessToken };
