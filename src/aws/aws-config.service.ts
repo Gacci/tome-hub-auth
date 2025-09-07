@@ -4,13 +4,17 @@ import { ConfigService } from '@nestjs/config';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 import crypto from 'crypto';
-// import multer from 'multer';
+import sharp from 'sharp';
 import { extname } from 'path';
+
 import { EnvironmentService } from '@/common/services/environment/environment.service';
 
+// import multer from 'multer';
 export enum S3Bucket {
   USER_PROFILES = 'ant-profiles'
 }
+
+export const S3ImageFormat = 'jpeg';
 
 @Injectable()
 export class AwsConfigService {
@@ -53,8 +57,12 @@ export class AwsConfigService {
     const unique = `${(Date.now().toString() + crypto.randomBytes(16).toString('hex')).slice(0, 32).replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5')}${extname(file.originalname)}`;
     await this.s3Client.send(
       new PutObjectCommand({
-        Body: file.buffer,
+        ContentType: 'image/jpeg',
+        Body: await sharp(file.buffer)
+          .toFormat(S3ImageFormat)
+          .toBuffer(),
         Bucket: bucketName,
+        CacheControl: "public, max-age=2592000",
         Key: unique
       })
     );

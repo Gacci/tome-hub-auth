@@ -284,7 +284,7 @@ export class AuthService {
 
   async updateProfilePicture(userId: number, file: Express.Multer.File) {
     const key = file
-      ? await this.awsS3Service.upload(S3Bucket.PROFILES, file)
+      ? await this.awsS3Service.upload(S3Bucket.USER_PROFILES, file)
       : null;
 
     return await this.update(userId, {
