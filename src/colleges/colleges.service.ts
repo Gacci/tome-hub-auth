@@ -28,9 +28,27 @@ export class CollegesService {
     return this.colleges.destroy({ where: { collegeId } });
   }
 
-  emailDomainExists(email: string) {
+  findAllCampuses(email: string) {
+    return this.colleges.findAll({
+      where: {
+        emailDomain: {
+          [Op.or]: email
+            .toLowerCase()
+            .replace(/.+@/, '')
+            .split('.')
+            .map((_: string, i: number, tokens: string[]) =>
+              tokens.slice(i).join('.')
+            )
+            .filter((domain: string) => domain.includes('.'))
+        }
+      }
+    });
+  }
+
+  findOneCampus(email: string, collegeId?: number) {
     return this.colleges.findOne({
       where: {
+        ...(collegeId ? { collegeId } : {}),
         emailDomain: {
           [Op.or]: email
             .toLowerCase()

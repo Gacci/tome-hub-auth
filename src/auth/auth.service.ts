@@ -53,7 +53,7 @@ export class AuthService {
     @InjectModel(User) private readonly users: typeof User
   ) {}
   async register(email: string, password: string): Promise<void> {
-    if (!(await this.collegesService.emailDomainExists(email))) {
+    if (!(await this.collegesService.findOneCampus(email))) {
       throw new BadRequestException({
         error: 'EmailError',
         message: 'Email is not valid, an academic email required'
@@ -108,7 +108,7 @@ export class AuthService {
   }
 
   async verifyAccount(payload: VerifyAccountDto) {
-    if (!(await this.collegesService.emailDomainExists(payload.email))) {
+    if (!(await this.collegesService.findOneCampus(payload.email))) {
       throw new BadRequestException({
         error: 'EmailError',
         message: 'Email is not valid, an academic email required'
@@ -165,10 +165,10 @@ export class AuthService {
   }
 
   async login(credentials: LoginAuthDto): Promise<JwtTokens | null> {
-    if (!(await this.collegesService.emailDomainExists(credentials.email))) {
+    if (!(await this.collegesService.findOneCampus(credentials.email))) {
       throw new BadRequestException({
         error: 'EmailError',
-        message: 'Email is not valid, an academic email is required'
+        message: 'The campus email you entered isn’t in our system yet, but we’re working on adding more colleges'
       });
     }
 
@@ -319,7 +319,7 @@ export class AuthService {
   }
 
   async sendResetPasswordOtp(email: string): Promise<void> {
-    if (!(await this.collegesService.emailDomainExists(email))) {
+    if (!(await this.collegesService.findOneCampus(email))) {
       throw new BadRequestException({
         error: 'CredentialsError',
         message: 'Either password or username is incorrect'
@@ -344,7 +344,7 @@ export class AuthService {
   }
 
   async verifyResetPasswordOtp(email: string, resetPasswordOtp: string) {
-    if (!(await this.collegesService.emailDomainExists(email))) {
+    if (!(await this.collegesService.findOneCampus(email))) {
       throw new BadRequestException({
         error: 'CredentialsError',
         message: 'Either password or username is incorrect'
@@ -644,7 +644,7 @@ export class AuthService {
     return this.jwtService.sign(
       { ...payload, type: TokenType.ACCESS },
       {
-        expiresIn: +this.configService.get('JWT_ACCESS_TOKEN_EXPIRES')
+        expiresIn: Number(this.configService.get('JWT_ACCESS_TOKEN_EXPIRES'))
       }
     );
   }
@@ -653,7 +653,7 @@ export class AuthService {
     return this.jwtService.sign(
       { ...payload, type: TokenType.REFRESH },
       {
-        expiresIn: +this.configService.get('JWT_REFRESH_TOKEN_EXPIRES')
+        expiresIn: Number(this.configService.get('JWT_REFRESH_TOKEN_EXPIRES'))
       }
     );
   }

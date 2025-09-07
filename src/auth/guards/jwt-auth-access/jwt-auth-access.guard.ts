@@ -38,6 +38,8 @@ export class JwtAuthAccessGuard
     const refreshAuthToken: string | null =
       request.cookies?.[JWT_REFRESH_TOKEN_NAME];
 
+    console.log('access token', accessAuthToken);
+    console.log('refresh token', refreshAuthToken);
     if (!accessAuthToken && !refreshAuthToken) {
       throw new UnauthorizedException({
         error: 'SessionExpired',

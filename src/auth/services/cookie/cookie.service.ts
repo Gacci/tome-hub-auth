@@ -13,7 +13,6 @@ export class CookieService {
       httpOnly: false, //this.env.isProduction(),
       secure: false,
       path: '/',
-      ...options,
       ...(this.env.isProduction()
         ? {
             domain: 'sydebook.com',
@@ -21,7 +20,8 @@ export class CookieService {
           }
         : {
             sameSite: 'lax'
-          })
+          }),
+      ...options
     };
   }
 }
