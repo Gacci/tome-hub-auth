@@ -16,7 +16,7 @@ export class CookieService {
       ...(this.env.isProduction()
         ? {
             domain: 'sydebook.com',
-            sameSite: 'none'
+            sameSite: 'lax' //'none' //change to 'none' when using https
           }
         : {
             sameSite: 'lax'
