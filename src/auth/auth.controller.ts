@@ -33,23 +33,23 @@ import {
 } from '@/config/constants';
 import { CheckUserAccessGuard } from '@/guards/user-access/check-user-access.guard';
 
-import { CookieOptions, Request, Response } from 'express';
+import { Request, Response } from 'express';
 
 // import { userProfileStorage } from '../common/data/users-merchant-data';
-import { AuthService } from './auth.service';
-import { CredentialsDto } from './dto/credentials.dto';
-import { EmailDto } from './dto/email.dto';
-import { LoginAuthDto } from './dto/login.dto';
-import { OtpDto } from './dto/otp.dto';
-import { ProfilePictureUrlDto } from './dto/profile-picture-url.dto';
-import { ProfileDto } from './dto/profile.dto';
-import { RegisterAuthDto } from './dto/register-auth.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
-import { VerifyAccountDto } from './dto/verify-account.dto';
-import { AccountVerifiedGuard } from './guards/account-verified/account-verified.guard';
-import { JwtAuthAccessGuard } from './guards/jwt-auth-access/jwt-auth-access.guard';
-import { JwtAuthRefreshGuard } from './guards/jwt-auth-refresh/jwt-auth-refresh.guard';
+import { AuthService } from '@/auth/auth.service';
+import { CredentialsDto } from '@/auth/dto/credentials.dto';
+import { EmailDto } from '@/auth//dto/email.dto';
+import { LoginAuthDto } from '@/auth//dto/login.dto';
+import { OtpDto } from '@/auth//dto/otp.dto';
+import { ProfilePictureUrlDto } from '@/auth//dto/profile-picture-url.dto';
+import { ProfileDto } from '@/auth/dto/profile.dto';
+import { RegisterAuthDto } from '@/auth/dto/register-auth.dto';
+import { ResetPasswordDto } from '@/auth/dto/reset-password.dto';
+import { UpdateAuthDto } from '@/auth/dto/update-auth.dto';
+import { VerifyAccountDto } from '@/auth/dto/verify-account.dto';
+import { AccountVerifiedGuard } from '@/auth/guards/account-verified/account-verified.guard';
+import { JwtAuthAccessGuard } from '@/auth/guards/jwt-auth-access/jwt-auth-access.guard';
+import { JwtAuthRefreshGuard } from '@/auth/guards/jwt-auth-refresh/jwt-auth-refresh.guard';
 
 @ApiTags('Auth')
 @Controller()

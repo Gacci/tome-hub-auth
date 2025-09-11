@@ -21,7 +21,7 @@ export class S3StorageService {
     }
 
     if (this.env.isDevelopment()) {
-      return `http://localhost:4566/media/${s3BucketName}/${s3StorageKey}`;
+      return `http://localhost/media/${s3BucketName}/${s3StorageKey}`;
     }
 
     if (this.env.isLocal()) {

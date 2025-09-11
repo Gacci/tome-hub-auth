@@ -168,7 +168,8 @@ export class AuthService {
     if (!(await this.collegesService.findOneCampus(credentials.email))) {
       throw new BadRequestException({
         error: 'EmailError',
-        message: 'The campus email you entered isn’t in our system yet, but we’re working on adding more colleges'
+        message:
+          'The campus email you entered isn’t in our system yet, but we’re working on adding more colleges'
       });
     }
 
